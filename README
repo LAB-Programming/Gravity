@@ -1,0 +1,15 @@
+A cool gravity simulator which simulates (somewhat accurately)
+gravitational forces in 2-Dimensions
+
+Known Bugs:
+	-Method of closing currently doesn't work needs to be force quit
+	-We need to be clear on what units are being used
+	-Simulation speed is very finicky with too fast and too slow not
+		really working
+Important Improvements:
+	-More Interactability!!!!
+		-Add and delete bodies
+		-Move Bodies
+	-Bodies Fuse or bounce
+Future Plans:
+	-Configure it so that you can actually make sun-planet systems
