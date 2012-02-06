@@ -2,16 +2,16 @@ package com.labprogramming.gravity;
 
 class Forces {
 
-	private final float xForces;
-	private final float yForces;
+	private final double xForces;
+	private final double yForces;
 
-	public Forces(float force, float hypot, float xPointTo, float yPointTo) {
-		float scaleFactor = force / hypot;
+	public Forces(double force, double hypot, double xPointTo, double yPointTo) {
+		double scaleFactor = force / hypot;
 		xForces = scaleFactor * xPointTo;
 		yForces = scaleFactor * yPointTo;
 	}
 
-	public Forces(float xForce, float yForce) {
+	public Forces(double xForce, double yForce) {
 		xForces = xForce;
 		yForces = yForce;
 	}
@@ -19,14 +19,14 @@ class Forces {
 	/**
 	 * @return the xForces
 	 */
-	public float getXForces() {
+	public double getXForces() {
 		return xForces;
 	}
 
 	/**
 	 * @return the yForces
 	 */
-	public float getYForces() {
+	public double getYForces() {
 		return yForces;
 	}
 }

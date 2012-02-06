@@ -3,7 +3,7 @@ gravitational forces in 2-Dimensions
 
 Known Bugs:
 	-Method of closing currently doesn't work needs to be force quit
-	-We need to be clear on what units are being used
+	-I don't believe that G would be the same in 2D and 3D gravity
 	-Simulation speed is very finicky with too fast and too slow not
 		really working
 Important Improvements:

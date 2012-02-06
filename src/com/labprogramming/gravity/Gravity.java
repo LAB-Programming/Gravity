@@ -20,10 +20,12 @@ import javax.swing.JFrame;
 
 public class Gravity {
 
-	public static final float FRICTION = 0.89F;
+	public static final double FRICTION = 0.89D;
 
-	public static final float G = (float) 66.740; // newton's gravitational
-													// constant
+	public static final double G = 0.0000000667384D; // newton's gravitational
+														// constant in km^3
+														// Pg^-1 s^-2
+	private boolean is3D = false;
 
 	public final int width;
 
@@ -49,17 +51,18 @@ public class Gravity {
 	/**
 	 * Launch the application.
 	 */
-	public static void main(String[] args) {
+	public static void main(final String[] args) {
 		EventQueue.invokeLater(new Runnable() {
 			@Override
 			public void run() {
 				Gravity app = new Gravity();
 				try {
-					app.bodies.add(new Body(-40, -40, 2, -2, 1));
-					app.bodies.add(new Body(20, 30, 0, 1, 0.3F));
-					app.bodies.add(new Body(40, 40, -2, 2, 2));
-					app.bodies.add(new Body(0, 0, 0, 0, 1));
-					app.bodies.add(new Body(70, -120, 2, 2, 0.3F));
+					if (args.length > 0 && args[0].equalsIgnoreCase("3D")) {
+						System.out.println("3D Gravity Calculations = true");
+						app.is3D = true;
+					}
+					preset1(app);
+					// marsDeimosPreset(app);
 					app.nanoTime = System.nanoTime();
 					app.run();
 				} catch (Exception e) {
@@ -69,6 +72,21 @@ public class Gravity {
 				}
 			}
 		});
+	}
+
+	// doesn't work
+	@SuppressWarnings("unused")
+	private static void marsDeimosPreset(Gravity app) {
+		app.bodies.add(new Body(0, 0, 0, 0, 641910000000D));
+		app.bodies.add(new Body(92.356, 0, 0, 0.0002138, 10720));
+	}
+
+	private static void preset1(Gravity app) {
+		app.bodies.add(new Body(-40, -40, 2, -2, 10));
+		app.bodies.add(new Body(20, 30, 0, 1, 3));
+		app.bodies.add(new Body(40, 40, -2, 2, 20));
+		app.bodies.add(new Body(0, 0, 0, 0, 10));
+		app.bodies.add(new Body(70, -120, 2, 2, 3));
 	}
 
 	private void run() {
@@ -126,8 +144,8 @@ public class Gravity {
 	private void updateBodies(long elapsedTime) {
 		for (Body b : bodies) {
 			Forces forces = getForceOnBody(b);
-			float xForces = forces.getXForces();
-			float yForces = forces.getYForces();
+			double xForces = forces.getXForces();
+			double yForces = forces.getYForces();
 			b.update(elapsedTime, nanosPerSecond, xForces, yForces);
 			checkForCollisions(b);
 			System.out.println(b);
@@ -136,7 +154,7 @@ public class Gravity {
 
 	private void checkForCollisions(Body b) {
 		if (b.getIntX() - BODY_WIDTH / 2 <= -width / 2) {
-			b.setVelX((float) (abs(b.getVelX()) * pow(FRICTION, bodies.size())));
+			b.setVelX(abs(b.getVelX()) * pow(FRICTION, bodies.size()));
 		}
 		if (b.getIntX() + BODY_WIDTH / 2 >= width / 2) {
 			b.setVelX(-1 * abs(b.getVelX()) * 0.9F);
@@ -150,16 +168,17 @@ public class Gravity {
 	}
 
 	private Forces getForceOnBody(Body b) {
-		float xForceSum = 0;
-		float yForceSum = 0;
+		double xForceSum = 0;
+		double yForceSum = 0;
 		for (Body b2 : bodies) {
 			if (b2.equals(b)) {
 				continue;
 			}
-			float xDiff = b2.getX() - b.getX();
-			float yDiff = b2.getY() - b.getY();
-			float d = (float) hypot(xDiff, yDiff);
-			float force = G * (b.getMass() * b2.getMass() / d);
+			double xDiff = b2.getX() - b.getX();
+			double yDiff = b2.getY() - b.getY();
+			double d = hypot(xDiff, yDiff);
+			double force = G
+					* (b.getMass() * b2.getMass() / (is3D ? d * d : d));
 			Forces forces = new Forces(force, d, xDiff, yDiff);
 			xForceSum += forces.getXForces();
 			yForceSum += forces.getYForces();

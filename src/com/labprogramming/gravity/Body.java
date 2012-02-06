@@ -4,15 +4,15 @@ import static java.lang.Math.round;
 
 public class Body {
 
-	private float x;
-	private float y;
-	private float velX;
-	private float velY;
-	private float acelX = 0;
-	private float acelY = 0;
-	private float mass;
+	private double x;
+	private double y;
+	private double velX;
+	private double velY;
+	private double acelX = 0;
+	private double acelY = 0;
+	private double mass;
 
-	public Body(float x, float y, float velX, float velY, float mass) {
+	public Body(double x, double y, double velX, double velY, double mass) {
 		this.x = x;
 		this.y = y;
 		this.velX = velX;
@@ -20,9 +20,9 @@ public class Body {
 		this.mass = mass;
 	}
 
-	public void update(long timeElapsed, long nanosPerSecond, float xForces,
-			float yForces) {
-		float secondsElapsed = timeElapsed / nanosPerSecond;
+	public void update(long timeElapsed, long nanosPerSecond, double xForces,
+			double yForces) {
+		double secondsElapsed = timeElapsed / nanosPerSecond;
 		x += velX * secondsElapsed;
 		y += velY * secondsElapsed;
 		velX += acelX * secondsElapsed;
@@ -35,13 +35,13 @@ public class Body {
 	 * @return the x to int (for rendering)
 	 */
 	public int getIntX() {
-		return round(x);
+		return (int) round(x);
 	}
 
 	/**
 	 * @return the x
 	 */
-	public float getX() {
+	public double getX() {
 		return x;
 	}
 
@@ -49,14 +49,14 @@ public class Body {
 	 * @param x
 	 *            the x to set
 	 */
-	public void setX(float x) {
+	public void setX(double x) {
 		this.x = x;
 	}
 
 	/**
 	 * @return the y
 	 */
-	public float getY() {
+	public double getY() {
 		return y;
 	}
 
@@ -64,21 +64,21 @@ public class Body {
 	 * @return the y to int (for rendering)
 	 */
 	public int getIntY() {
-		return round(y);
+		return (int) round(y);
 	}
 
 	/**
 	 * @param y
 	 *            the y to set
 	 */
-	public void setY(float y) {
+	public void setY(double y) {
 		this.y = y;
 	}
 
 	/**
 	 * @return the velX
 	 */
-	public float getVelX() {
+	public double getVelX() {
 		return velX;
 	}
 
@@ -86,14 +86,14 @@ public class Body {
 	 * @param velX
 	 *            the velX to set
 	 */
-	public void setVelX(float velX) {
+	public void setVelX(double velX) {
 		this.velX = velX;
 	}
 
 	/**
 	 * @return the velY
 	 */
-	public float getVelY() {
+	public double getVelY() {
 		return velY;
 	}
 
@@ -101,14 +101,14 @@ public class Body {
 	 * @param velY
 	 *            the velY to set
 	 */
-	public void setVelY(float velY) {
+	public void setVelY(double velY) {
 		this.velY = velY;
 	}
 
 	/**
 	 * @return the acelX
 	 */
-	public float getAcelX() {
+	public double getAcelX() {
 		return acelX;
 	}
 
@@ -116,14 +116,14 @@ public class Body {
 	 * @param acelX
 	 *            the acelX to set
 	 */
-	public void setAcelX(float acelX) {
+	public void setAcelX(double acelX) {
 		this.acelX = acelX;
 	}
 
 	/**
 	 * @return the acelY
 	 */
-	public float getAcelY() {
+	public double getAcelY() {
 		return acelY;
 	}
 
@@ -131,14 +131,14 @@ public class Body {
 	 * @param acelY
 	 *            the acelY to set
 	 */
-	public void setAcelY(float acelY) {
+	public void setAcelY(double acelY) {
 		this.acelY = acelY;
 	}
 
 	/**
 	 * @return the mass
 	 */
-	public float getMass() {
+	public double getMass() {
 		return mass;
 	}
 
@@ -146,14 +146,14 @@ public class Body {
 	 * @param mass
 	 *            the mass to set
 	 */
-	public void setMass(float mass) {
+	public void setMass(double mass) {
 		this.mass = mass;
 	}
 
 	@Override
 	public String toString() {
 		return new String("\n" + "Body at (" + x + "[int " + getIntX() + "],"
-				+ "[int " + getIntY() + "])\n" + "  with motion vector ("
+				+ y + "[int " + getIntY() + "])\n" + "  with motion vector ("
 				+ velX + "," + velY + ")\n" + "  with acceleration vector ("
 				+ acelX + "," + acelY + ")\n" + "  with mass " + mass);
 	}
