@@ -19,22 +19,14 @@ import javax.swing.JFrame;
 
 public class Gravity {
 
-<<<<<<< HEAD
-	public static final double FRICTION = 0.89D;
-
-	public static final double G = 0.0000000667384D; // newton's gravitational
-														// constant in km^3
+public static final double G = 0.0000000667384D; // newton's gravitational
 														// Pg^-1 s^-2
 	private boolean is3D = false;
 
-=======
 	public static final float FRICTION = 0.9F;
 
-	public static final float G = (float) 66.740; // newton's gravitational
-												  // constant
 	private static Random r = new Random();
 	
->>>>>>> Now randomly generates bodies
 	public final int width;
 
 	public final int height;

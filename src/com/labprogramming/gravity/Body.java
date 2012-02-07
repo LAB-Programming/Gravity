@@ -14,18 +14,6 @@ public class Body {
 	private double mass;
 
 	public Body(double x, double y, double velX, double velY, double mass) {
-=======
-	public static final float DENSITY = 15;
-	private float x;
-	private float y;
-	private float velX;
-	private float velY;
-	private float acelX = 0;
-	private float acelY = 0;
-	private float mass;
-
-	public Body(float x, float y, float velX, float velY, float mass) {
->>>>>>> Now randomly generates bodies
 		this.x = x;
 		this.y = y;
 		this.velX = velX;
@@ -175,13 +163,6 @@ public class Body {
 
 	@Override
 	public String toString() {
-<<<<<<< HEAD
-		return new String("\n" + "Body at (" + x + "[int " + getIntX() + "],"
-				+ y + "[int " + getIntY() + "])\n" + "  with motion vector ("
-				+ velX + "," + velY + ")\n" + "  with acceleration vector ("
-				+ acelX + "," + acelY + ")\n" + "  with mass " + mass);
-=======
 		return new String("Body at ("+x+", "+y+") with mass "+mass);
->>>>>>> Now randomly generates bodies
 	}
 }
