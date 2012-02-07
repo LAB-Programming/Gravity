@@ -1,9 +1,10 @@
 package com.labprogramming.gravity;
 
-import static java.lang.Math.round;
+import static java.lang.Math.*;
 
 public class Body {
 
+<<<<<<< HEAD
 	private double x;
 	private double y;
 	private double velX;
@@ -13,6 +14,18 @@ public class Body {
 	private double mass;
 
 	public Body(double x, double y, double velX, double velY, double mass) {
+=======
+	public static final float DENSITY = 15;
+	private float x;
+	private float y;
+	private float velX;
+	private float velY;
+	private float acelX = 0;
+	private float acelY = 0;
+	private float mass;
+
+	public Body(float x, float y, float velX, float velY, float mass) {
+>>>>>>> Now randomly generates bodies
 		this.x = x;
 		this.y = y;
 		this.velX = velX;
@@ -149,12 +162,26 @@ public class Body {
 	public void setMass(double mass) {
 		this.mass = mass;
 	}
+	
+	public float getRadius(){
+		return (float)sqrt(abs(mass)/PI)*DENSITY;
+	}
+	
+	public float distanceTo(Body b){
+		float xDiff=this.getX()-b.getX();
+		float yDiff=this.getY()-b.getY();
+		return (float)hypot(xDiff,yDiff);
+	}
 
 	@Override
 	public String toString() {
+<<<<<<< HEAD
 		return new String("\n" + "Body at (" + x + "[int " + getIntX() + "],"
 				+ y + "[int " + getIntY() + "])\n" + "  with motion vector ("
 				+ velX + "," + velY + ")\n" + "  with acceleration vector ("
 				+ acelX + "," + acelY + ")\n" + "  with mass " + mass);
+=======
+		return new String("Body at ("+x+", "+y+") with mass "+mass);
+>>>>>>> Now randomly generates bodies
 	}
 }
