@@ -53,15 +53,13 @@ public static final double G = 0.0000000667384D; // newton's gravitational
 			@Override
 			public void run() {
 				Gravity app = new Gravity();
-				try {
-<<<<<<< HEAD
+				try {=
 					if (args.length > 0 && args[0].equalsIgnoreCase("3D")) {
 						System.out.println("3D Gravity Calculations = true");
 						app.is3D = true;
 					}
-					preset1(app);
-					// marsDeimosPreset(app);
-=======
+					//preset1(app);
+					// marsDeimosPreset(app);=
 					int howManyBodies = r.nextInt(10)+2;
 					for(int i=0;i<howManyBodies;i++){
 						int x = r.nextInt(app.width)-app.width/2;
@@ -81,8 +79,7 @@ public static final double G = 0.0000000667384D; // newton's gravitational
 					//app.bodies.add(new Body(140, 130, 0, 0, 0.3F));
 					//app.bodies.add(new Body(40, -40, -2, 2, 3));
 					//app.bodies.add(new Body(-100, 100, 0, 0, 1));
-					//app.bodies.add(new Body(70, -120, 2, 2, 0.3F));
->>>>>>> Now randomly generates bodies
+					//app.bodies.add(new Body(70, -120, 2, 2, 0.3F));=
 					app.nanoTime = System.nanoTime();
 					app.run();
 				} catch (Exception e) {
@@ -95,7 +92,6 @@ public static final double G = 0.0000000667384D; // newton's gravitational
 		});
 	}
 
-<<<<<<< HEAD
 	// doesn't work
 	@SuppressWarnings("unused")
 	private static void marsDeimosPreset(Gravity app) {
@@ -111,7 +107,6 @@ public static final double G = 0.0000000667384D; // newton's gravitational
 		app.bodies.add(new Body(70, -120, 2, 2, 3));
 	}
 
-=======
 
 	private boolean isInOtherBody(Body b) {
 		for(Body b2 : bodies){
@@ -120,7 +115,6 @@ public static final double G = 0.0000000667384D; // newton's gravitational
 		return false;
 	}
 	
->>>>>>> Now randomly generates bodies
 	private void run() {
 		while (running) {
 			System.out.println("run() in while loop");
@@ -195,11 +189,6 @@ public static final double G = 0.0000000667384D; // newton's gravitational
 		}
 	}
 
-<<<<<<< HEAD
-	private void checkForCollisions(Body b) {
-		if (b.getIntX() - BODY_WIDTH / 2 <= -width / 2) {
-			b.setVelX(abs(b.getVelX()) * pow(FRICTION, bodies.size()));
-=======
 	/**
 	 * @param the body to check collisions for
 	 * @return whether the list of bodies was modified or not
@@ -223,7 +212,6 @@ public static final double G = 0.0000000667384D; // newton's gravitational
 				// it is no accident that we return false even though we bounce, the return is suposed to symbolize
 				// weather or not we changed the list of bodies, which we didn't
 			}
->>>>>>> Now randomly generates bodies
 		}
 		return false;
 	}
@@ -291,18 +279,11 @@ public static final double G = 0.0000000667384D; // newton's gravitational
 			if (b2.equals(b)) {
 				continue;
 			}
-<<<<<<< HEAD
 			double xDiff = b2.getX() - b.getX();
 			double yDiff = b2.getY() - b.getY();
 			double d = hypot(xDiff, yDiff);
 			double force = G
 					* (b.getMass() * b2.getMass() / (is3D ? d * d : d));
-=======
-			float xDiff = b2.getX() - b.getX();
-			float yDiff = b2.getY() - b.getY();
-			float d = (float) hypot(xDiff, yDiff);
-			float force = G * ((b.getMass() * b2.getMass()) / d);
->>>>>>> Now randomly generates bodies
 			Forces forces = new Forces(force, d, xDiff, yDiff);
 			xForceSum += forces.getXForces();
 			yForceSum += forces.getYForces();

@@ -4,7 +4,6 @@ import static java.lang.Math.*;
 
 public class Body {
 
-<<<<<<< HEAD
 	private double x;
 	private double y;
 	private double velX;
