@@ -4,6 +4,7 @@ import static java.lang.Math.*;
 
 public class Body {
 
+	private static final double DENSITY = 10;
 	private double x;
 	private double y;
 	private double velX;
@@ -150,13 +151,13 @@ public class Body {
 		this.mass = mass;
 	}
 	
-	public float getRadius(){
-		return (float)sqrt(abs(mass)/PI)*DENSITY;
+	public double getRadius(){
+		return sqrt(abs(mass)/PI)*DENSITY;
 	}
 	
-	public float distanceTo(Body b){
-		float xDiff=this.getX()-b.getX();
-		float yDiff=this.getY()-b.getY();
+	public double distanceTo(Body b){
+		double xDiff=this.getX()-b.getX();
+		double yDiff=this.getY()-b.getY();
 		return (float)hypot(xDiff,yDiff);
 	}
 

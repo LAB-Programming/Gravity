@@ -8,8 +8,8 @@ import java.awt.Graphics;
 import java.awt.GraphicsDevice;
 import java.awt.GraphicsEnvironment;
 import java.awt.Window;
-import java.awt.event.MouseEvent;
-import java.awt.event.MouseMotionListener;
+import java.awt.event.KeyAdapter;
+import java.awt.event.KeyEvent;
 import java.awt.image.BufferStrategy;
 import java.awt.image.VolatileImage;
 import java.util.HashSet;
@@ -53,7 +53,7 @@ public static final double G = 0.0000000667384D; // newton's gravitational
 			@Override
 			public void run() {
 				Gravity app = new Gravity();
-				try {=
+				try {
 					if (args.length > 0 && args[0].equalsIgnoreCase("3D")) {
 						System.out.println("3D Gravity Calculations = true");
 						app.is3D = true;
@@ -66,7 +66,7 @@ public static final double G = 0.0000000667384D; // newton's gravitational
 						int y = r.nextInt(app.height)-app.height/2;
 						int xv = r.nextInt(6)-3;
 						int yv = r.nextInt(6)-3;
-						float mass = r.nextFloat()*3+0.5F;
+						double mass = r.nextDouble()*3+0.5F;
 						Body b = new Body(x,y,xv,yv,mass);
 						if(app.isInOtherBody(b)){
 							i--;
@@ -75,12 +75,8 @@ public static final double G = 0.0000000667384D; // newton's gravitational
 						System.out.println("Creating "+b);
 						app.bodies.add(b);
 					}
-					//app.bodies.add(new Body(-80, -80, 0, 0, 1));
-					//app.bodies.add(new Body(140, 130, 0, 0, 0.3F));
-					//app.bodies.add(new Body(40, -40, -2, 2, 3));
-					//app.bodies.add(new Body(-100, 100, 0, 0, 1));
-					//app.bodies.add(new Body(70, -120, 2, 2, 0.3F));=
 					app.nanoTime = System.nanoTime();
+					app.frame.setVisible(true);
 					app.run();
 				} catch (Exception e) {
 					e.printStackTrace();
@@ -99,6 +95,7 @@ public static final double G = 0.0000000667384D; // newton's gravitational
 		app.bodies.add(new Body(92.356, 0, 0, 0.0002138, 10720));
 	}
 
+	@SuppressWarnings("unused")
 	private static void preset1(Gravity app) {
 		app.bodies.add(new Body(-40, -40, 2, -2, 10));
 		app.bodies.add(new Body(20, 30, 0, 1, 3));
@@ -159,12 +156,12 @@ public static final double G = 0.0000000667384D; // newton's gravitational
 			if(b.getMass()>0) g2.setColor(Color.CYAN);
 			else g2.setColor(Color.RED);
 			g2.fillOval(b.getIntX() + width / 2, b.getIntY() + height / 2,
-					round(b.getRadius()), round(b.getRadius()));
+					(int)round(b.getRadius()), (int)round(b.getRadius()));
 		}
 		g2.setColor(Color.WHITE);
 		for (Body b : bodies) {
 			g2.drawOval(b.getIntX() + width / 2, b.getIntY() + height / 2,
-					round(b.getRadius()), round(b.getRadius()));
+					(int)round(b.getRadius()), (int)round(b.getRadius()));
 		}
 	}
 
@@ -216,56 +213,58 @@ public static final double G = 0.0000000667384D; // newton's gravitational
 		return false;
 	}
 	
-	@SuppressWarnings("all") private void combine(Body b, Body b2){
+	@SuppressWarnings("all")
+	private void combine(Body b, Body b2){
 		bodies.remove(b);
 		bodies.remove(b2);
 		Forces bforces = getForceOnBody(b);
 		Forces b2forces = getForceOnBody(b2);
-		float newXLoc=((b.getMass()*b.getX())+(b2.getMass()*b2.getX()))/(b.getMass()+b2.getMass());
-		float newYLoc=((b.getMass()*b.getY())+(b2.getMass()*b2.getY()))/(b.getMass()+b2.getMass());
-		float newXForce=((b.getMass()*bforces.getXForces())+(b2.getMass()*b2forces.getXForces()))/(b.getMass()+b2.getMass());
-		float newYForce=((b.getMass()*bforces.getYForces())+(b2.getMass()*b2forces.getYForces()))/(b.getMass()+b2.getMass());
-		float newMass=b.getMass()+b2.getMass();
+		double newXLoc=((b.getMass()*b.getX())+(b2.getMass()*b2.getX()))/(b.getMass()+b2.getMass());
+		double newYLoc=((b.getMass()*b.getY())+(b2.getMass()*b2.getY()))/(b.getMass()+b2.getMass());
+		double newXForce=((b.getMass()*bforces.getXForces())+(b2.getMass()*b2forces.getXForces()))/(b.getMass()+b2.getMass());
+		double newYForce=((b.getMass()*bforces.getYForces())+(b2.getMass()*b2forces.getYForces()))/(b.getMass()+b2.getMass());
+		double newMass=b.getMass()+b2.getMass();
 		bodies.add(new Body(newXLoc,newYLoc,newXForce,newYForce,newMass));
 	}
 	
-	@SuppressWarnings("all") private void bounce(Body b, Body b2){
+	@SuppressWarnings("all")
+	private void bounce(Body b, Body b2){
 		//currently doesn't take into account the relative speeds and masses of the two objects
-		float xv1 = b.getVelX(), xv2 = b2.getVelX();
-		float yv1 = b.getVelY(), yv2 = b2.getVelY();
-		float xl1 = b.getX(), xl2 = b2.getX();
-		float yl1 = b.getY(), yl2 = b2.getY();
-		float a1 = (float)atan(yv1/xv1);
-		float r1 = (float)atan((yl1-yl2)/(xl1-xl2));
-		float a1final = 2*r1-(float)PI-a1;
-		float dist1=(float)hypot(xv1,yv1);
-		b.setVelX((float)cos(a1final)*dist1);
-		b.setVelX((float)sin(a1final)*dist1);
-		float a2 = (float)tan(yv2/xv2);
-		float r2 = (float)tan((yl1-yl2)/(xl1-xl2));
-		float a2final = 2*r2-(float)PI-a2;
-		float dist2=(float)hypot(xv2,yv2);
-		b2.setVelX((float)cos(a2final)*dist2);
-		b2.setVelX((float)sin(a2final)*dist2);
+		double xv1 = b.getVelX(), xv2 = b2.getVelX();
+		double yv1 = b.getVelY(), yv2 = b2.getVelY();
+		double xl1 = b.getX(), xl2 = b2.getX();
+		double yl1 = b.getY(), yl2 = b2.getY();
+		double a1 = atan(yv1/xv1);
+		double r1 = atan((yl1-yl2)/(xl1-xl2));
+		double a1final = 2*r1-PI-a1;
+		double dist1=hypot(xv1,yv1);
+		b.setVelX(cos(a1final)*dist1);
+		b.setVelX(sin(a1final)*dist1);
+		double a2 = tan(yv2/xv2);
+		double r2 = tan((yl1-yl2)/(xl1-xl2));
+		double a2final = 2*r2-PI-a2;
+		double dist2=hypot(xv2,yv2);
+		b2.setVelX(cos(a2final)*dist2);
+		b2.setVelX(sin(a2final)*dist2);
 	}
 	
 	private void checkForCollisionsWithWall(Body b) {
 		if (b.getVelX()<=0 && b.getIntX() - b.getRadius() / 2 <= -width / 2) {
-			b.setVelX((float) (abs(b.getVelX()) * pow(FRICTION, getMassSum())));
+			b.setVelX( (abs(b.getVelX()) * pow(FRICTION, getMassSum())));
 		}
 		if (b.getVelX()>=0 && b.getIntX() + b.getRadius() / 2 >= width / 2) {
-			b.setVelX(-1 * (float) (abs(b.getVelX()) * pow(FRICTION, getMassSum())));
+			b.setVelX(-1 *  (abs(b.getVelX()) * pow(FRICTION, getMassSum())));
 		}
 		if (b.getVelY()<=0 && b.getIntY() - b.getRadius() / 2 <= -height / 2) {
-			b.setVelY((float) (abs(b.getVelY()) * pow(FRICTION, getMassSum())));
+			b.setVelY( (abs(b.getVelY()) * pow(FRICTION, getMassSum())));
 		}
 		if (b.getVelY()>=0 && b.getIntY() + b.getRadius() / 2 >= height / 2) {
-			b.setVelY(-1 * (float) (abs(b.getVelY()) * pow(FRICTION, getMassSum())));
+			b.setVelY(-1 *  (abs(b.getVelY()) * pow(FRICTION, getMassSum())));
 		}
 	}
 	
-	private float getMassSum(){
-		float sum = 0F;
+	private double getMassSum(){
+		double sum = 0F;
 		for(Body b : bodies){
 			sum+=b.getMass();
 		}
@@ -310,21 +309,11 @@ public static final double G = 0.0000000667384D; // newton's gravitational
 				.getDefaultScreenDevice();
 
 		toFullScreen();
-		device.getFullScreenWindow().addMouseMotionListener(
-				new MouseMotionListener() {
+		device.getFullScreenWindow().addKeyListener(
+				new KeyAdapter() {
 
-					@Override
-					public void mouseDragged(MouseEvent arg0) {
-						System.out.println("mouseDragged");
-						running = false;
-					}
-
-					@Override
-					public void mouseMoved(MouseEvent arg0) {
-						System.out.println("mouseMoved");
-						if (arg0.getX() == 0) {
-							running = false;
-						}
+					public void keyPressed(KeyEvent ke) {
+						System.out.println("!!!!mouseMoved!!!!");
 					}
 
 				});
