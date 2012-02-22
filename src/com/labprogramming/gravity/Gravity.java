@@ -41,7 +41,7 @@ public static final double G = 0.0000000667384D; // newton's gravitational
 
 	private HashSet<Body> bodies = new HashSet<Body>();
 
-	private VolatileImage img;
+	//private VolatileImage img;
 
 	private boolean running = true;
 
@@ -131,10 +131,11 @@ public static final double G = 0.0000000667384D; // newton's gravitational
 			frame.createBufferStrategy(2);
 			bs = frame.getBufferStrategy();
 		}
-		if (img == null) {
+		/*if (img == null) {
 			img = frame.createVolatileImage(width, height);
 		}
-		Graphics g2 = img.createGraphics();
+		Graphics g2 = img.createGraphics();*/
+		Graphics g2 = bs.getDrawGraphics();
 		try {
 			g2.clearRect(0, 0, width, height);
 			drawBodies(g2);
@@ -142,12 +143,12 @@ public static final double G = 0.0000000667384D; // newton's gravitational
 			g2.dispose();
 		}
 
-		Graphics g = bs.getDrawGraphics();
+		/*Graphics g = bs.getDrawGraphics();
 		try {
 			g.drawImage(img, 0, 0, width, height, null);
 		} finally {
 			g.dispose();
-		}
+		}*/
 		bs.show();
 	}
 
