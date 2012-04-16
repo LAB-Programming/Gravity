@@ -1,6 +1,14 @@
 package com.labprogramming.gravity;
 
-import static java.lang.Math.*;
+import static java.lang.Math.PI;
+import static java.lang.Math.abs;
+import static java.lang.Math.atan;
+import static java.lang.Math.cos;
+import static java.lang.Math.hypot;
+import static java.lang.Math.pow;
+import static java.lang.Math.round;
+import static java.lang.Math.sin;
+import static java.lang.Math.tan;
 
 import java.awt.Color;
 import java.awt.EventQueue;
@@ -8,22 +16,27 @@ import java.awt.Graphics;
 import java.awt.GraphicsDevice;
 import java.awt.GraphicsEnvironment;
 import java.awt.Window;
-import java.awt.event.KeyAdapter;
-import java.awt.event.KeyEvent;
+import java.awt.event.MouseEvent;
+import java.awt.event.MouseMotionListener;
 import java.awt.image.BufferStrategy;
 import java.awt.image.VolatileImage;
+
 import java.util.HashSet;
 import java.util.Random;
 
 import javax.swing.JFrame;
 
-public class Gravity {
-
-public static final double G = 0.0000000667384D; // newton's gravitational
+public class Gravity implements Runnable{
+	
+	private static final boolean FULLSCREEN = false;
+	
+	private static final boolean LOG = false;
+	
+	public static final double G = Math.pow(0.0000000667384D,0.3); // newton's gravitational
 														// Pg^-1 s^-2
 	private boolean is3D = false;
-
-	public static final float FRICTION = 0.9F;
+	
+	public static final float FRICTION = 0.9999F;
 
 	private static Random r = new Random();
 	
@@ -37,7 +50,7 @@ public static final double G = 0.0000000667384D; // newton's gravitational
 
 	private long nanoTime;
 
-	private long nanosPerSecond = 16000000L;
+	private long nanosPerSecond = 10000000L;
 
 	private HashSet<Body> bodies = new HashSet<Body>();
 
@@ -55,7 +68,7 @@ public static final double G = 0.0000000667384D; // newton's gravitational
 				Gravity app = new Gravity();
 				try {
 					if (args.length > 0 && args[0].equalsIgnoreCase("3D")) {
-						System.out.println("3D Gravity Calculations = true");
+						if(LOG) System.out.println("3D Gravity Calculations = true");
 						app.is3D = true;
 					}
 					//preset1(app);
@@ -64,20 +77,21 @@ public static final double G = 0.0000000667384D; // newton's gravitational
 					for(int i=0;i<howManyBodies;i++){
 						int x = r.nextInt(app.width)-app.width/2;
 						int y = r.nextInt(app.height)-app.height/2;
-						int xv = r.nextInt(6)-3;
-						int yv = r.nextInt(6)-3;
-						double mass = r.nextDouble()*3+0.5F;
+						int xv = r.nextInt(12)-6;
+						int yv = r.nextInt(12)-6;
+						double mass = r.nextDouble()*3000+5;
 						Body b = new Body(x,y,xv,yv,mass);
 						if(app.isInOtherBody(b)){
 							i--;
 							continue;
 						}
-						System.out.println("Creating "+b);
+						if(LOG) System.out.println("Creating "+b);
 						app.bodies.add(b);
 					}
 					app.nanoTime = System.nanoTime();
-					app.frame.setVisible(true);
-					app.run();
+					Thread appRunner = new Thread(app);
+					appRunner.setPriority(Thread.MAX_PRIORITY);
+					appRunner.start();
 				} catch (Exception e) {
 					e.printStackTrace();
 				} finally {
@@ -88,7 +102,10 @@ public static final double G = 0.0000000667384D; // newton's gravitational
 		});
 	}
 
-	// doesn't work
+	/**
+	 * doesn't work!
+	 * @param app who to present
+	 */
 	@SuppressWarnings("unused")
 	private static void marsDeimosPreset(Gravity app) {
 		app.bodies.add(new Body(0, 0, 0, 0, 641910000000D));
@@ -112,18 +129,19 @@ public static final double G = 0.0000000667384D; // newton's gravitational
 		return false;
 	}
 	
-	private void run() {
+	public void run() {
 		while (running) {
-			System.out.println("run() in while loop");
+			if(LOG) System.out.println("run() in while loop");
 			long elapsedTime = System.nanoTime() - nanoTime;
 			nanoTime = System.nanoTime();
 			updateBodies(elapsedTime);
 			render();
+			Thread.yield();
 		}
 	}
 
 	private void render() {
-		System.out.println("rendering");
+		if(LOG) System.out.println("rendering");
 		BufferStrategy bs = frame.getBufferStrategy();
 		int width = frame.getWidth();
 		int height = frame.getHeight();
@@ -171,7 +189,7 @@ public static final double G = 0.0000000667384D; // newton's gravitational
 		while(!finishedColliding){
 			finishedColliding=true;
 			for (Body b : bodies) {
-				System.out.println("Colliding "+b);
+				if(LOG) System.out.println("Colliding "+b);
 				if(checkForCollisions(b)){
 					finishedColliding=false;
 					break;
@@ -179,7 +197,7 @@ public static final double G = 0.0000000667384D; // newton's gravitational
 			}
 		}
 		for (Body b : bodies){
-			System.out.println("Moving "+b);
+			if(LOG) System.out.println("Moving "+b);
 			Forces forces = getForceOnBody(b);
 			double xForces = forces.getXForces();
 			double yForces = forces.getYForces();
@@ -188,7 +206,7 @@ public static final double G = 0.0000000667384D; // newton's gravitational
 	}
 
 	/**
-	 * @param the body to check collisions for
+	 * @param b the body to check collisions for
 	 * @return whether the list of bodies was modified or not
 	 */
 	private boolean checkForCollisions(Body b) {
@@ -196,17 +214,16 @@ public static final double G = 0.0000000667384D; // newton's gravitational
 		return checkForCollisionsWithOtherBodies(b);
 	}
 	/**
-	 * check to determine if a body hits another body, and make them join together if they do
-	 * right now broken!
-	 * @param the body to check collisions for
+	 * check to determine if a body hits another body, and do something if they do
+	 * @param b the body to check collisions for
 	 * @return whether or not we changed the list of bodies
 	 */
 	private boolean checkForCollisionsWithOtherBodies(Body b){
 		for(Body b2 : bodies) {
 			if(b!=b2&&b.distanceTo(b2)<=b.getRadius()+b2.getRadius()){
-				System.out.println(b+" is colliding with "+b2);
-				//combine(b,b2); return true;
-				bounce(b,b2);
+				if(LOG) System.out.println(b+" is colliding with "+b2);
+				combine(b,b2); return true;
+				//bounce(b,b2);
 				// it is no accident that we return false even though we bounce, the return is suposed to symbolize
 				// weather or not we changed the list of bodies, which we didn't
 			}
@@ -222,8 +239,8 @@ public static final double G = 0.0000000667384D; // newton's gravitational
 		Forces b2forces = getForceOnBody(b2);
 		double newXLoc=((b.getMass()*b.getX())+(b2.getMass()*b2.getX()))/(b.getMass()+b2.getMass());
 		double newYLoc=((b.getMass()*b.getY())+(b2.getMass()*b2.getY()))/(b.getMass()+b2.getMass());
-		double newXForce=((b.getMass()*bforces.getXForces())+(b2.getMass()*b2forces.getXForces()))/(b.getMass()+b2.getMass());
-		double newYForce=((b.getMass()*bforces.getYForces())+(b2.getMass()*b2forces.getYForces()))/(b.getMass()+b2.getMass());
+		double newXForce=((b.getMass()*b.getVelX())+(b2.getMass()*b2.getVelX()))/(b.getMass()+b2.getMass());
+		double newYForce=((b.getMass()*b.getVelY())+(b2.getMass()*b2.getVelY()))/(b.getMass()+b2.getMass());
 		double newMass=b.getMass()+b2.getMass();
 		bodies.add(new Body(newXLoc,newYLoc,newXForce,newYForce,newMass));
 	}
@@ -309,19 +326,37 @@ public static final double G = 0.0000000667384D; // newton's gravitational
 		device = GraphicsEnvironment.getLocalGraphicsEnvironment()
 				.getDefaultScreenDevice();
 
-		toFullScreen();
-		device.getFullScreenWindow().addKeyListener(
-				new KeyAdapter() {
+		if(FULLSCREEN) toFullScreen();
+		else toPartScreen();
+		
+		(FULLSCREEN?device.getFullScreenWindow():frame).addMouseMotionListener(
+				new MouseMotionListener() {
 
-					public void keyPressed(KeyEvent ke) {
-						System.out.println("!!!!mouseMoved!!!!");
+					@Override
+					public void mouseDragged(MouseEvent arg0) {
+						if(LOG) System.out.println("mouseDragged");
+						running = false;
+					}
+
+					@Override
+					public void mouseMoved(MouseEvent arg0) {
+						if(LOG) System.out.println("mouseMoved");
+						if (arg0.getX() == 0) {
+							running = false;
+						}
 					}
 
 				});
 	}
+	
+	private void toPartScreen() {
+		frame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
+		frame.setSize(1024,768);
+		frame.setVisible(true);
+	}
 
 	private void toFullScreen() {
-		System.out.println("Going to full screen");
+		if(LOG) System.out.println("Going to full screen");
 		frame.setUndecorated(true);
 		frame.setIgnoreRepaint(true);
 		frame.setResizable(false);
@@ -329,7 +364,7 @@ public static final double G = 0.0000000667384D; // newton's gravitational
 	}
 
 	private void close() {
-		System.out.println("closing");
+		if(LOG) System.out.println("closing");
 		Window window = device.getFullScreenWindow();
 		if (window != null) {
 			window.dispose();

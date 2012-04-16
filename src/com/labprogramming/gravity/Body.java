@@ -1,10 +1,14 @@
 package com.labprogramming.gravity;
 
-import static java.lang.Math.*;
+import static java.lang.Math.PI;
+import static java.lang.Math.abs;
+import static java.lang.Math.hypot;
+import static java.lang.Math.round;
+import static java.lang.Math.sqrt;
 
 public class Body {
 
-	private static final double DENSITY = 10;
+	public static final double DENSITY = 1;
 	private double x;
 	private double y;
 	private double velX;
@@ -40,7 +44,7 @@ public class Body {
 	}
 
 	/**
-	 * @return the x
+	 * @return the x location
 	 */
 	public double getX() {
 		return x;
@@ -55,7 +59,7 @@ public class Body {
 	}
 
 	/**
-	 * @return the y
+	 * @return the y location
 	 */
 	public double getY() {
 		return y;
@@ -158,7 +162,7 @@ public class Body {
 	public double distanceTo(Body b){
 		double xDiff=this.getX()-b.getX();
 		double yDiff=this.getY()-b.getY();
-		return (float)hypot(xDiff,yDiff);
+		return hypot(xDiff,yDiff);
 	}
 
 	@Override
