@@ -267,16 +267,16 @@ public class Gravity implements Runnable{
 	}
 	
 	private void checkForCollisionsWithWall(Body b) {
-		if (b.getVelX()<=0 && b.getIntX() - b.getRadius() / 2 <= -width / 2) {
+		if (b.getVelX() <= 0 && b.getIntX() - b.getRadius() <= -width / 2) {
 			b.setVelX( (abs(b.getVelX()) * pow(FRICTION, getMassSum())));
 		}
-		if (b.getVelX()>=0 && b.getIntX() + b.getRadius() / 2 >= width / 2) {
+		if (b.getVelX() >= 0 && b.getIntX() + b.getRadius() >= width / 2) {
 			b.setVelX(-1 *  (abs(b.getVelX()) * pow(FRICTION, getMassSum())));
 		}
-		if (b.getVelY()<=0 && b.getIntY() - b.getRadius() / 2 <= -height / 2) {
+		if (b.getVelY() <= 0 && b.getIntY() - b.getRadius() <= -height / 2) {
 			b.setVelY( (abs(b.getVelY()) * pow(FRICTION, getMassSum())));
 		}
-		if (b.getVelY()>=0 && b.getIntY() + b.getRadius() / 2 >= height / 2) {
+		if (b.getVelY() >= 0 && b.getIntY() + b.getRadius() >= height / 2) {
 			b.setVelY(-1 *  (abs(b.getVelY()) * pow(FRICTION, getMassSum())));
 		}
 	}
