@@ -19,10 +19,18 @@ import java.awt.Window;
 import java.awt.event.MouseEvent;
 import java.awt.event.MouseMotionListener;
 import java.awt.image.BufferStrategy;
-import java.awt.image.VolatileImage;
+import java.io.BufferedReader;
+import java.io.BufferedWriter;
+import java.io.File;
+import java.io.FileNotFoundException;
+import java.io.FileReader;
+import java.io.FileWriter;
+import java.io.IOException;
 
 import java.util.HashSet;
+import java.util.NoSuchElementException;
 import java.util.Random;
+import java.util.Scanner;
 
 import javax.swing.JFrame;
 
@@ -72,22 +80,8 @@ public class Gravity implements Runnable{
 						app.is3D = true;
 					}
 					//preset1(app);
-					// marsDeimosPreset(app);=
-					int howManyBodies = r.nextInt(10)+2;
-					for(int i=0;i<howManyBodies;i++){
-						int x = r.nextInt(app.width)-app.width/2;
-						int y = r.nextInt(app.height)-app.height/2;
-						int xv = r.nextInt(12)-6;
-						int yv = r.nextInt(12)-6;
-						double mass = r.nextDouble()*3000+5;
-						Body b = new Body(x,y,xv,yv,mass);
-						if(app.isInOtherBody(b)){
-							i--;
-							continue;
-						}
-						if(LOG) System.out.println("Creating "+b);
-						app.bodies.add(b);
-					}
+					//marsDeimosPreset(app);
+					randomBodies(app);
 					app.nanoTime = System.nanoTime();
 					Thread appRunner = new Thread(app);
 					appRunner.setPriority(Thread.MAX_PRIORITY);
@@ -100,6 +94,24 @@ public class Gravity implements Runnable{
 			}
 
 		});
+	}
+	
+	private static void randomBodies(Gravity app) {
+		int howManyBodies = r.nextInt(10)+2;
+		for(int i=0;i<howManyBodies;i++){
+			int x = r.nextInt(app.width)-app.width/2;
+			int y = r.nextInt(app.height)-app.height/2;
+			int xv = r.nextInt(12)-6;
+			int yv = r.nextInt(12)-6;
+			double mass = r.nextDouble()*3000+5;
+			Body b = new Body(x,y,xv,yv,mass);
+			if(app.isInOtherBody(b)){
+				i--;
+				continue;
+			}
+			if(LOG) System.out.println("Creating "+b);
+			app.bodies.add(b);
+		}
 	}
 
 	/**
@@ -312,9 +324,72 @@ public class Gravity implements Runnable{
 	 * Create the application.
 	 */
 	public Gravity() {
+		nanosPerSecond = readNanosPerSecond();
+		if(LOG) System.out.println("nanosPerSecond = " + nanosPerSecond);
 		initialize();
 		width = frame.getWidth();
 		height = frame.getHeight();
+	}
+
+	private long readNanosPerSecond() {
+		File file = new File("nanos.txt");
+		if(!file.exists()) {
+			try {
+				if(!file.createNewFile()) throw new IOException("I thought I checked that the file didn't exist!!!");
+			} catch (IOException ioe) {
+				System.err.println("IOException while attempting to create nano.txt");
+				ioe.printStackTrace();
+			}
+			BufferedWriter writer = null;
+			try {
+				writer = new BufferedWriter(new FileWriter(file));
+			} catch(IOException ioe) {
+				System.err.println("Failed to open nanos.txt");
+				ioe.printStackTrace();
+			}
+			try {
+				writer.write("" + nanosPerSecond);
+				writer.flush();
+			} catch (IOException ioe) {
+				System.err.println("Failed to write default value to file");
+				System.err.println("Deleting file...");
+				if(file.delete()) {
+					System.err.println("nanos.txt deleted!");
+				} else {
+					System.err.println("Arggh! Failed to delete file!");
+				}
+				ioe.printStackTrace();
+			}
+			try {
+				writer.close();
+			} catch (IOException ioe) {
+				System.err.println("the write stream has failed to close! VERY BAD THING!");
+				ioe.printStackTrace();
+			}
+			return nanosPerSecond;
+		}else if(!file.isFile() || !file.canRead()) {
+			System.err.println("a nanos.txt already exists but is not readable and/or is not a file");
+			return nanosPerSecond;
+		} else {
+			Scanner reader = null;
+			try {
+				reader = new Scanner(new BufferedReader(new FileReader(file)));
+			} catch (FileNotFoundException e) {
+				System.err.println("How the hell did this happen!! I checked to make sure the file was there!");
+				e.printStackTrace();
+				return nanosPerSecond;
+			}
+			Long nanos = null;
+			try {
+				nanos = reader.nextLong();
+				if(nanos <= 0) throw new NoSuchElementException();
+			} catch(NoSuchElementException nsee) {
+				System.err.println("No valid values found for nanos per second (a number greater than 0 and within range of the long)");
+				return nanosPerSecond;
+			}
+			reader.close();
+			return nanos;
+		}
 	}
 
 	/**
