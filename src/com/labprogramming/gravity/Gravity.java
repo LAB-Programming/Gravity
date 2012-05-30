@@ -27,6 +27,7 @@ import java.io.FileReader;
 import java.io.FileWriter;
 import java.io.IOException;
 
+import java.util.Arrays;
 import java.util.HashSet;
 import java.util.NoSuchElementException;
 import java.util.Random;
@@ -36,9 +37,9 @@ import javax.swing.JFrame;
 
 public class Gravity implements Runnable{
 	
-	private static final boolean FULLSCREEN = false;
+	private boolean FULLSCREEN = false;
 	
-	private static final boolean LOG = false;
+	private static boolean LOG = false;
 	
 	public static final double G = Math.pow(0.0000000667384D,0.3); // newton's gravitational
 														// Pg^-1 s^-2
@@ -75,9 +76,20 @@ public class Gravity implements Runnable{
 			public void run() {
 				Gravity app = new Gravity();
 				try {
-					if (args.length > 0 && args[0].equalsIgnoreCase("3D")) {
-						if(LOG) System.out.println("3D Gravity Calculations = true");
-						app.is3D = true;
+					if (args.length > 0) {
+						Arrays.sort(args);
+						if(Arrays.binarySearch(args, "LOG") >= 0) {
+							System.out.println("Logging is on!");
+							LOG = true;
+						}
+						if(Arrays.binarySearch(args, "FULLSCREEN") >= 0) {
+							if(LOG) System.out.println("FULLSCREEN = true");
+							app.FULLSCREEN = true;
+						}
+						if(Arrays.binarySearch(args, "3D") >= 0) {
+							if(LOG) System.out.println("3D Gravity Calculations = true");
+							app.is3D = true;
+						}
 					}
 					//preset1(app);
 					//marsDeimosPreset(app);
