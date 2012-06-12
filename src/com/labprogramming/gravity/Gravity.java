@@ -2,7 +2,7 @@ package com.labprogramming.gravity;
 
 import static java.lang.Math.PI;
 import static java.lang.Math.abs;
-import static java.lang.Math.atan;
+import static java.lang.Math.atan2;
 import static java.lang.Math.cos;
 import static java.lang.Math.hypot;
 import static java.lang.Math.pow;
@@ -18,6 +18,8 @@ import java.awt.GraphicsEnvironment;
 import java.awt.Window;
 import java.awt.event.MouseEvent;
 import java.awt.event.MouseMotionListener;
+import java.awt.event.MouseListener;
+import java.awt.event.MouseAdapter;
 import java.awt.image.BufferStrategy;
 import java.io.BufferedReader;
 import java.io.BufferedWriter;
@@ -37,6 +39,8 @@ import javax.swing.JFrame;
 
 public class Gravity implements Runnable{
 	
+	private static final boolean GRAVITY = false; //DO NOT SET TO TRUE!!!! will have bugs if set to true
+	
 	private boolean FULLSCREEN = false;
 	
 	private static boolean LOG = false;
@@ -45,7 +49,9 @@ public class Gravity implements Runnable{
 														// Pg^-1 s^-2
 	private boolean is3D = false;
 	
-	public static final float FRICTION = 0.9999F;
+	public static final float FRICTION = GRAVITY?0.9999F:1;
+	
+	public static final int BUFFER_NUM = 10;
 
 	private static Random r = new Random();
 	
@@ -62,6 +68,8 @@ public class Gravity implements Runnable{
 	private long nanosPerSecond = 10000000L;
 
 	private HashSet<Body> bodies = new HashSet<Body>();
+	
+	private boolean paused=false;
 
 	//private VolatileImage img;
 
@@ -81,6 +89,9 @@ public class Gravity implements Runnable{
 						if(Arrays.binarySearch(args, "LOG") >= 0) {
 							System.out.println("Logging is on!");
 							LOG = true;
+						}if(Arrays.binarySearch(args, "NOLOG") >= 0) {
+							System.out.println("Logging is off!");
+							LOG = false;
 						}
 						if(Arrays.binarySearch(args, "FULLSCREEN") >= 0) {
 							if(LOG) System.out.println("FULLSCREEN = true");
@@ -96,6 +107,7 @@ public class Gravity implements Runnable{
 					randomBodies(app);
 					app.nanoTime = System.nanoTime();
 					Thread appRunner = new Thread(app);
+					appRunner.setName("Simulation Thread");
 					appRunner.setPriority(Thread.MAX_PRIORITY);
 					appRunner.start();
 				} catch (Exception e) {
@@ -158,10 +170,14 @@ public class Gravity implements Runnable{
 			if(LOG) System.out.println("run() in while loop");
 			long elapsedTime = System.nanoTime() - nanoTime;
 			nanoTime = System.nanoTime();
-			updateBodies(elapsedTime);
+			if(!paused) updateBodies(elapsedTime);
 			render();
 			Thread.yield();
 		}
+	}
+	
+	public void togglePause(){
+		paused=!paused;
 	}
 
 	private void render() {
@@ -170,7 +186,7 @@ public class Gravity implements Runnable{
 		int width = frame.getWidth();
 		int height = frame.getHeight();
 		if (bs == null) {
-			frame.createBufferStrategy(2);
+			frame.createBufferStrategy(BUFFER_NUM);
 			bs = frame.getBufferStrategy();
 		}
 		/*if (img == null) {
@@ -222,7 +238,7 @@ public class Gravity implements Runnable{
 		}
 		for (Body b : bodies){
 			if(LOG) System.out.println("Moving "+b);
-			Forces forces = getForceOnBody(b);
+			Forces forces = getGravitationalForceOnBody(b);
 			double xForces = forces.getXForces();
 			double yForces = forces.getYForces();
 			b.update(elapsedTime, nanosPerSecond, xForces, yForces);
@@ -237,17 +253,28 @@ public class Gravity implements Runnable{
 		checkForCollisionsWithWall(b);
 		return checkForCollisionsWithOtherBodies(b);
 	}
+	
+	private void updateCollidingWith(Body b){
+		HashSet<Body> doneCollidingWith=new HashSet<Body>();
+		for(Body temp:b.collidingWith){
+			if(temp!=b&&temp.distanceTo(b)<=temp.getRadius()+b.getRadius()) doneCollidingWith.add(temp);
+		}
+		b.collidingWith.removeAll(doneCollidingWith);
+	}
+	
 	/**
 	 * check to determine if a body hits another body, and do something if they do
 	 * @param b the body to check collisions for
 	 * @return whether or not we changed the list of bodies
 	 */
 	private boolean checkForCollisionsWithOtherBodies(Body b){
+		updateCollidingWith(b);
 		for(Body b2 : bodies) {
-			if(b!=b2&&b.distanceTo(b2)<=b.getRadius()+b2.getRadius()){
+			if(b!=b2&&b.distanceTo(b2)<=b.getRadius()+b2.getRadius()&&!b.collidingWith.contains(b2)){
 				if(LOG) System.out.println(b+" is colliding with "+b2);
-				combine(b,b2); return true;
-				//bounce(b,b2);
+				b.collidingWith.add(b2);
+				//combine(b,b2); return true;
+				bounce(b,b2);
 				// it is no accident that we return false even though we bounce, the return is suposed to symbolize
 				// weather or not we changed the list of bodies, which we didn't
 			}
@@ -259,8 +286,8 @@ public class Gravity implements Runnable{
 	private void combine(Body b, Body b2){
 		bodies.remove(b);
 		bodies.remove(b2);
-		Forces bforces = getForceOnBody(b);
-		Forces b2forces = getForceOnBody(b2);
+		Forces bforces = getGravitationalForceOnBody(b);
+		Forces b2forces = getGravitationalForceOnBody(b2);
 		double newXLoc=((b.getMass()*b.getX())+(b2.getMass()*b2.getX()))/(b.getMass()+b2.getMass());
 		double newYLoc=((b.getMass()*b.getY())+(b2.getMass()*b2.getY()))/(b.getMass()+b2.getMass());
 		double newXForce=((b.getMass()*b.getVelX())+(b2.getMass()*b2.getVelX()))/(b.getMass()+b2.getMass());
@@ -271,13 +298,18 @@ public class Gravity implements Runnable{
 	
 	@SuppressWarnings("all")
 	private void bounce(Body b, Body b2){
-		//currently doesn't take into account the relative speeds and masses of the two objects
+		double bRelXVel = b.getVelX()-b2.getVelX();
+		double bRelYVel = b.getVelY()-b2.getVelY();
+		double bRelSpeed = hypot(bRelXVel, bRelYVel);
+		double bRelDirection = atan2(bRelYVel, bRelXVel);
+		
+		/*//currently doesn't take into account the relative speeds and masses of the two objects
 		double xv1 = b.getVelX(), xv2 = b2.getVelX();
 		double yv1 = b.getVelY(), yv2 = b2.getVelY();
 		double xl1 = b.getX(), xl2 = b2.getX();
 		double yl1 = b.getY(), yl2 = b2.getY();
-		double a1 = atan(yv1/xv1);
-		double r1 = atan((yl1-yl2)/(xl1-xl2));
+		double a1 = atan2(yv1,xv1);
+		double r1 = atan2((yl1-yl2),(xl1-xl2));
 		double a1final = 2*r1-PI-a1;
 		double dist1=hypot(xv1,yv1);
 		b.setVelX(cos(a1final)*dist1);
@@ -287,7 +319,7 @@ public class Gravity implements Runnable{
 		double a2final = 2*r2-PI-a2;
 		double dist2=hypot(xv2,yv2);
 		b2.setVelX(cos(a2final)*dist2);
-		b2.setVelX(sin(a2final)*dist2);
+		b2.setVelX(sin(a2final)*dist2);*/
 	}
 	
 	private void checkForCollisionsWithWall(Body b) {
@@ -313,10 +345,10 @@ public class Gravity implements Runnable{
 		return sum;
 	}
 
-	private Forces getForceOnBody(Body b) {
+	private Forces getGravitationalForceOnBody(Body b) {
 		double xForceSum = 0;
 		double yForceSum = 0;
-		for (Body b2 : bodies) {
+		if(GRAVITY) for (Body b2 : bodies) {
 			if (b2.equals(b)) {
 				continue;
 			}
@@ -421,16 +453,25 @@ public class Gravity implements Runnable{
 
 					@Override
 					public void mouseDragged(MouseEvent arg0) {
-						if(LOG) System.out.println("mouseDragged");
-						running = false;
+						//if(LOG) System.out.println("mouseDragged");
+						//running = false;
 					}
 
 					@Override
 					public void mouseMoved(MouseEvent arg0) {
-						if(LOG) System.out.println("mouseMoved");
+						//if(LOG) System.out.println("mouseMoved");
 						if (arg0.getX() == 0) {
-							running = false;
+							//running = false;
 						}
+					}
+
+				});
+		(FULLSCREEN?device.getFullScreenWindow():frame).addMouseListener(
+				new MouseAdapter() {
+
+					@Override
+					public void mouseClicked(MouseEvent arg0){
+						togglePause();
 					}
 
 				});

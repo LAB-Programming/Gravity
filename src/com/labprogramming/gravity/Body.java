@@ -5,6 +5,7 @@ import static java.lang.Math.abs;
 import static java.lang.Math.hypot;
 import static java.lang.Math.round;
 import static java.lang.Math.sqrt;
+import java.util.HashSet;
 
 public class Body {
 
@@ -16,6 +17,7 @@ public class Body {
 	private double acelX = 0;
 	private double acelY = 0;
 	private double mass;
+	public HashSet<Body> collidingWith=new HashSet<Body>();
 
 	public Body(double x, double y, double velX, double velY, double mass) {
 		this.x = x;
