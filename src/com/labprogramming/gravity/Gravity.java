@@ -238,9 +238,9 @@ public class Gravity implements Runnable{
 		}
 		for (Body b : bodies){
 			if(LOG) System.out.println("Moving "+b);
-			Forces forces = getGravitationalForceOnBody(b);
-			double xForces = forces.getXForces();
-			double yForces = forces.getYForces();
+			VectorUtil forces = getGravitationalForceOnBody(b);
+			double xForces = forces.getXMag();
+			double yForces = forces.getYMag();
 			b.update(elapsedTime, nanosPerSecond, xForces, yForces);
 		}
 	}
@@ -286,8 +286,8 @@ public class Gravity implements Runnable{
 	private void combine(Body b, Body b2){
 		bodies.remove(b);
 		bodies.remove(b2);
-		Forces bforces = getGravitationalForceOnBody(b);
-		Forces b2forces = getGravitationalForceOnBody(b2);
+		VectorUtil bforces = getGravitationalForceOnBody(b);
+		VectorUtil b2forces = getGravitationalForceOnBody(b2);
 		double newXLoc=((b.getMass()*b.getX())+(b2.getMass()*b2.getX()))/(b.getMass()+b2.getMass());
 		double newYLoc=((b.getMass()*b.getY())+(b2.getMass()*b2.getY()))/(b.getMass()+b2.getMass());
 		double newXForce=((b.getMass()*b.getVelX())+(b2.getMass()*b2.getVelX()))/(b.getMass()+b2.getMass());
@@ -302,6 +302,8 @@ public class Gravity implements Runnable{
 		double bRelYVel = b.getVelY()-b2.getVelY();
 		double bRelSpeed = hypot(bRelXVel, bRelYVel);
 		double bRelDirection = atan2(bRelYVel, bRelXVel);
+		double collisionDirection = atan2(b.getY()-b2.getY(), b.getX()-b2.getX());
+		
 		
 		/*//currently doesn't take into account the relative speeds and masses of the two objects
 		double xv1 = b.getVelX(), xv2 = b2.getVelX();
@@ -345,7 +347,7 @@ public class Gravity implements Runnable{
 		return sum;
 	}
 
-	private Forces getGravitationalForceOnBody(Body b) {
+	private VectorUtil getGravitationalForceOnBody(Body b) {
 		double xForceSum = 0;
 		double yForceSum = 0;
 		if(GRAVITY) for (Body b2 : bodies) {
@@ -357,11 +359,11 @@ public class Gravity implements Runnable{
 			double d = hypot(xDiff, yDiff);
 			double force = G
 					* (b.getMass() * b2.getMass() / (is3D ? d * d : d));
-			Forces forces = new Forces(force, d, xDiff, yDiff);
-			xForceSum += forces.getXForces();
-			yForceSum += forces.getYForces();
+			VectorUtil forces = new VectorUtil(force, d, xDiff, yDiff);
+			xForceSum += forces.getXMag();
+			yForceSum += forces.getYMag();
 		}
-		return new Forces(xForceSum, yForceSum);
+		return new VectorUtil(xForceSum, yForceSum);
 	}
 
 	/**
