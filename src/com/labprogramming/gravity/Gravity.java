@@ -21,6 +21,7 @@ import java.awt.event.MouseMotionListener;
 import java.awt.event.MouseListener;
 import java.awt.event.MouseAdapter;
 import java.awt.image.BufferStrategy;
+
 import java.io.BufferedReader;
 import java.io.BufferedWriter;
 import java.io.File;
@@ -302,15 +303,15 @@ public class Gravity implements Runnable{
 		double bRelYVel = b.getVelY()-b2.getVelY();
 		double bRelSpeed = hypot(bRelXVel, bRelYVel);
 		double bRelDirection = atan2(bRelYVel, bRelXVel);
-		double collisionDirection = atan2(b.getY()-b2.getY(), b.getX()-b2.getX());
+		double collisionDirection = atan2(b2.getY()-b.getY(), b2.getX()-b.getX());
 		double bColParaRelVel = bRelSpeed*sin(collisionDirection-bRelDirection); //The Relative Velocity of b parallel to the collision
 		double bColPerpRelVel = bRelSpeed*cos(collisionDirection-bRelDirection); //The Relative Velocity of b perpendicular to the collision
 		double bAfterPerpRelVel = bColPerpRelVel*(b.getMass()-b2.getMass())/(b.getMass()+b2.getMass());
 		double b2AfterPerpRevVel = 2*b.getMass()*bColPerpRelVel/(b.getMass()+b2.getMass());
-		
-		
+		b.setVelX(bAfterPerpRelVel*cos(collisionDirection)+bColParaRelVel*cos(90+collisionDirection)-b2.getVelX());
+		b.setVelY(bAfterPerpRelVel*sin(collisionDirection)+bColParaRelVel*sin(90+collisionDirection)-b2.getVelY());
 		b2.setVelX(b2AfterPerpRevVel*cos(collisionDirection)+b2.getVelX());
-		b2.setVelX(b2AfterPerpRevVel*sin(collisionDirection)+b2.getVelY());
+		b2.setVelY(b2AfterPerpRevVel*sin(collisionDirection)+b2.getVelY());
 		
 		/*//currently doesn't take into account the relative speeds and masses of the two objects
 		double xv1 = b.getVelX(), xv2 = b2.getVelX();
