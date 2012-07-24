@@ -6,6 +6,7 @@ import static java.lang.Math.hypot;
 import static java.lang.Math.round;
 import static java.lang.Math.sqrt;
 import java.util.HashSet;
+import java.util.Iterator;
 
 public class Body {
 
@@ -17,7 +18,10 @@ public class Body {
 	private double acelX = 0;
 	private double acelY = 0;
 	private double mass;
-	public HashSet<Body> collidingWith=new HashSet<Body>();
+	public HashSet<Body> collidingWith = new HashSet<Body>();
+	private final int id;
+	private static int bodyCount = 0;
+	//private boolean colliding = false;
 
 	public Body(double x, double y, double velX, double velY, double mass) {
 		this.x = x;
@@ -25,6 +29,7 @@ public class Body {
 		this.velX = velX;
 		this.velY = velY;
 		this.mass = mass;
+		id = bodyCount++;
 	}
 
 	public void update(long timeElapsed, long nanosPerSecond, double xForces,
@@ -158,7 +163,7 @@ public class Body {
 	}
 	
 	public double getRadius(){
-		return sqrt(abs(mass)/PI)*DENSITY;
+		return sqrt(abs(mass)/(DENSITY*PI));
 	}
 	
 	public double distanceTo(Body b){
@@ -166,9 +171,30 @@ public class Body {
 		double yDiff=this.getY()-b.getY();
 		return hypot(xDiff,yDiff);
 	}
+	
+	/*Didn't realise colliding with had been implemented
+	public boolean isColliding() {
+		return colliding;
+	}
+	
+	public Iterator<Body> getCollisionIterator() {
+		return collidingWith.iterator();
+	}
+	
+	public boolean addCollisionBody(Body b) {
+		colliding = true;
+		return collidingWith.add(b);
+	}
+	
+	public boolean removeCollisionBody(Body b) {
+		boolean result = collidingWith.remove(b);
+		if(collidingWith.isEmpty()) colliding = false;
+		return result;
+	}
+	*/
 
 	@Override
 	public String toString() {
-		return new String("Body at ("+x+", "+y+") with mass "+mass);
+		return new String("Body #" + id + " at ("+x+", "+y+") with mass "+mass + " and radius "+getRadius());
 	}
 }

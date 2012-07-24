@@ -105,7 +105,8 @@ public class Gravity implements Runnable{
 					}
 					//preset1(app);
 					//marsDeimosPreset(app);
-					randomBodies(app);
+					//randomBodies(app);
+					collisionTest(app);
 					app.nanoTime = System.nanoTime();
 					Thread appRunner = new Thread(app);
 					appRunner.setName("Simulation Thread");
@@ -156,6 +157,12 @@ public class Gravity implements Runnable{
 		app.bodies.add(new Body(40, 40, -2, 2, 20));
 		app.bodies.add(new Body(0, 0, 0, 0, 10));
 		app.bodies.add(new Body(70, -120, 2, 2, 3));
+	}
+	
+	@SuppressWarnings("unused")
+	private static void collisionTest(Gravity app) {
+		app.bodies.add(new Body(-20, 0, -4, 0, 300));
+		app.bodies.add(new Body(20, 0, 4, 0, 300));
 	}
 
 
@@ -230,7 +237,6 @@ public class Gravity implements Runnable{
 		while(!finishedColliding){
 			finishedColliding=true;
 			for (Body b : bodies) {
-				if(LOG) System.out.println("Colliding "+b);
 				if(checkForCollisions(b)){
 					finishedColliding=false;
 					break;
@@ -258,7 +264,8 @@ public class Gravity implements Runnable{
 	private void updateCollidingWith(Body b){
 		HashSet<Body> doneCollidingWith=new HashSet<Body>();
 		for(Body temp:b.collidingWith){
-			if(temp!=b&&temp.distanceTo(b)<=temp.getRadius()+b.getRadius()) doneCollidingWith.add(temp);
+			if(temp == b) continue;
+			if(temp.distanceTo(b) > temp.getRadius()+b.getRadius()) doneCollidingWith.add(temp);
 		}
 		b.collidingWith.removeAll(doneCollidingWith);
 	}
@@ -271,9 +278,11 @@ public class Gravity implements Runnable{
 	private boolean checkForCollisionsWithOtherBodies(Body b){
 		updateCollidingWith(b);
 		for(Body b2 : bodies) {
-			if(b!=b2&&b.distanceTo(b2)<=b.getRadius()+b2.getRadius()&&!b.collidingWith.contains(b2)){
+			if(b == b2) continue;
+			if(b.distanceTo(b2) <= b.getRadius()+b2.getRadius() && !b.collidingWith.contains(b2) && !b2.collidingWith.contains(b)){
 				if(LOG) System.out.println(b+" is colliding with "+b2);
 				b.collidingWith.add(b2);
+				b2.collidingWith.add(b);
 				//combine(b,b2); return true;
 				bounce(b,b2);
 				// it is no accident that we return false even though we bounce, the return is suposed to symbolize
@@ -281,8 +290,7 @@ public class Gravity implements Runnable{
 			}
 		}
 		return false;
-	}
-	
+	} 
 	@SuppressWarnings("all")
 	private void combine(Body b, Body b2){
 		bodies.remove(b);
@@ -301,17 +309,33 @@ public class Gravity implements Runnable{
 	private void bounce(Body b, Body b2){
 		double bRelXVel = b.getVelX()-b2.getVelX();
 		double bRelYVel = b.getVelY()-b2.getVelY();
+		//System.out.println("Hmm... shifting frame of reference so that b2 is stationary");
+		//System.out.println("b velocity now is (" + bRelXVel + "," + bRelYVel + ")");
 		double bRelSpeed = hypot(bRelXVel, bRelYVel);
 		double bRelDirection = atan2(bRelYVel, bRelXVel);
+		//System.out.println("Ok the velocity of b is now a vector");
+		//System.out.println("Magnitude = " + bRelSpeed + ", angle = " + bRelDirection);
 		double collisionDirection = atan2(b2.getY()-b.getY(), b2.getX()-b.getX());
+		//System.out.println("The collision")
 		double bColParaRelVel = bRelSpeed*sin(collisionDirection-bRelDirection); //The Relative Velocity of b parallel to the collision
 		double bColPerpRelVel = bRelSpeed*cos(collisionDirection-bRelDirection); //The Relative Velocity of b perpendicular to the collision
-		double bAfterPerpRelVel = bColPerpRelVel*(b.getMass()-b2.getMass())/(b.getMass()+b2.getMass());
-		double b2AfterPerpRevVel = 2*b.getMass()*bColPerpRelVel/(b.getMass()+b2.getMass());
-		b.setVelX(bAfterPerpRelVel*cos(collisionDirection)+bColParaRelVel*cos(90+collisionDirection)-b2.getVelX());
-		b.setVelY(bAfterPerpRelVel*sin(collisionDirection)+bColParaRelVel*sin(90+collisionDirection)-b2.getVelY());
-		b2.setVelX(b2AfterPerpRevVel*cos(collisionDirection)+b2.getVelX());
-		b2.setVelY(b2AfterPerpRevVel*sin(collisionDirection)+b2.getVelY());
+		double bAfterColPerpRelVel = bColPerpRelVel*(b.getMass()-b2.getMass())/(b.getMass()+b2.getMass()); //The relative velocity of b after the collision perpendicular to the collision
+		double b2AfterColPerpRevVel = 2*b.getMass()*bColPerpRelVel/(b.getMass()+b2.getMass()); //The relative velocity of b2 after the collision perpendicular to the collision
+		double bNewVelX = bAfterColPerpRelVel*cos(collisionDirection)+bColParaRelVel*cos(PI+collisionDirection)+b2.getVelX();
+		double bNewVelY = bAfterColPerpRelVel*sin(collisionDirection)+bColParaRelVel*sin(PI+collisionDirection)+b2.getVelY();
+		double b2NewVelX = b2AfterColPerpRevVel*cos(collisionDirection)+b2.getVelX();
+		double b2NewVelY = b2AfterColPerpRevVel*sin(collisionDirection)+b2.getVelY();
+		//System.out.println("collisionDirection = " + collisionDirection + ", bRelDirection = " + bRelDirection);
+		if(LOG) {
+			System.out.println("bOldVelX = " + b.getVelX() + ", bNewVelX = " + bNewVelX);
+			System.out.println("bOldVelY = " + b.getVelY() + ", bNewVelY = " + bNewVelY);
+			System.out.println("b2OldVelX = " + b2.getVelX() + ", b2NewVelX = " + b2NewVelX);
+			System.out.println("b2OldVelY = " + b2.getVelY() + ", b2NewVelY = " + b2NewVelY);
+		}
+		b.setVelX(bNewVelX);
+		b.setVelY(bNewVelY);
+		b2.setVelX(b2NewVelX);
+		b2.setVelY(b2NewVelY);
 		
 		/*//currently doesn't take into account the relative speeds and masses of the two objects
 		double xv1 = b.getVelX(), xv2 = b2.getVelX();
