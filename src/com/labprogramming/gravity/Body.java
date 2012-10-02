@@ -1,8 +1,9 @@
 package com.labprogramming.gravity;
 
-import static java.lang.Math.PI;
 import static java.lang.Math.abs;
 import static java.lang.Math.hypot;
+import static java.lang.Math.PI;
+import static java.lang.Math.pow;
 import static java.lang.Math.round;
 import static java.lang.Math.sqrt;
 
@@ -28,8 +29,8 @@ public class Body {
 	public void update(long timeElapsed, long nanosPerSecond, double xForces,
 			double yForces) {
 		double secondsElapsed = timeElapsed / nanosPerSecond;
-		x += velX * secondsElapsed;
-		y += velY * secondsElapsed;
+		x += velX * secondsElapsed + 1/2 * acelX * pow(secondsElapsed, 2);
+		y += velY * secondsElapsed + 1/2 * acelY * pow(secondsElapsed, 2);
 		velX += acelX * secondsElapsed;
 		velY += acelY * secondsElapsed;
 		acelX = xForces / mass;
