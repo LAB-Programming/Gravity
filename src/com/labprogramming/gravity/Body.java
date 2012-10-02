@@ -33,7 +33,7 @@ public class Body {
 		velX += acelX * secondsElapsed;
 		velY += acelY * secondsElapsed;
 		acelX = xForces / mass;
-		acelY = xForces / mass;
+		acelY = yForces / mass;
 	}
 
 	/**
