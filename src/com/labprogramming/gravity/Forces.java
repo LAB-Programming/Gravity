@@ -6,7 +6,7 @@ class Forces {
 	private final double yForces;
 
 	public Forces(double force, double hypot, double xPointTo, double yPointTo) {
-		double scaleFactor = force / hypot;
+		double scaleFactor = hypot != 0 ? force / hypot : 0;
 		xForces = scaleFactor * xPointTo;
 		yForces = scaleFactor * yPointTo;
 	}
