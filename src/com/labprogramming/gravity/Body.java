@@ -33,41 +33,45 @@ public class Body {
 		id = bodyCount++;
 	}
 
-	@Deprecated public void update(long timeElapsed, long nanosPerSecond, double xForces,
+	public void update(double t, double xForces,
 			double yForces) {
-		double secondsElapsed = timeElapsed / nanosPerSecond;
+		/*double secondsElapsed = timeElapsed / nanosPerSecond;
 		x += velX * secondsElapsed + 1/2 * acelX * pow(secondsElapsed, 2);
 		y += velY * secondsElapsed + 1/2 * acelY * pow(secondsElapsed, 2);
 		velX += acelX * secondsElapsed;
 		velY += acelY * secondsElapsed;
 		acelX = xForces / mass;
-		acelY = yForces / mass;
+		acelY = yForces / mass;*/
+
+		setAcel(xForces, yForces);
+		setPos(MathUtil.positionAfterStep(b, (double)elapsedTime/(double)nanosPerSecond));
+		setVel(MathUtil.velocityAfterStep(b, (double)elapsedTime/(double)nanosPerSecond));
 	}
 	
-	public void setPos(double x, double y){
+	private void setPos(double x, double y){
 		this.x = x;
 		this.y = y;
 	}
 	
-	public void setVel(double x, double y){
+	private void setVel(double x, double y){
 		this.velX = x;
 		this.velY = y;
 	}
 	
-	public void setAcel(double x, double y){
+	private void setAcel(double x, double y){
 		this.acelX = x;
 		this.acelY = y;
 	}
 
-	public void setPos(double[] pos) {
+	private void setPos(double[] pos) {
 		setPos(pos[0],pos[1]);
 	}
 	
-	public void setVel(double[] vel) {
+	private void setVel(double[] vel) {
 		setVel(vel[0],vel[1]);
 	}
 	
-	public void setAcel(double[] acel){
+	private void setAcel(double[] acel){
 		setAcel(acel[0],acel[1]);
 	}
 
