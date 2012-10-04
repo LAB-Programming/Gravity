@@ -256,7 +256,7 @@ public class Gravity implements Runnable{
 			/*b.setAcel(xForces, yForces);
 			b.setPos(MathUtil.positionAfterStep(b, (double)elapsedTime/(double)nanosPerSecond));
 			b.setVel(MathUtil.velocityAfterStep(b, (double)elapsedTime/(double)nanosPerSecond));*/
-			b.update(elapsedTime, nanosPerSecond, xForces, yForces);
+			b.update((double)elapsedTime/(double)nanosPerSecond, xForces, yForces);
 		}
 	}
 
