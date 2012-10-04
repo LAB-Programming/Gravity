@@ -40,7 +40,7 @@ import javax.swing.JFrame;
 
 public class Gravity implements Runnable{
 	
-	private static final boolean GRAVITY = true; //DO NOT SET TO TRUE!!!! will have bugs if set to true
+	private static final boolean GRAVITY = true;
 	
 	private boolean FULLSCREEN = false;
 	
@@ -253,10 +253,10 @@ public class Gravity implements Runnable{
 			VectorUtil forces = getGravitationalForceOnBody(b);
 			double xForces = forces.getXMag();
 			double yForces = forces.getYMag();
-			b.setAcel(xForces, yForces);
+			/*b.setAcel(xForces, yForces);
 			b.setPos(MathUtil.positionAfterStep(b, (double)elapsedTime/(double)nanosPerSecond));
-			b.setVel(MathUtil.velocityAfterStep(b, (double)elapsedTime/(double)nanosPerSecond));
-			//b.update(elapsedTime, nanosPerSecond, xForces, yForces);
+			b.setVel(MathUtil.velocityAfterStep(b, (double)elapsedTime/(double)nanosPerSecond));*/
+			b.update(elapsedTime, nanosPerSecond, xForces, yForces);
 		}
 	}
 
