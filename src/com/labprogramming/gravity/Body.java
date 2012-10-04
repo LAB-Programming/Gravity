@@ -44,8 +44,8 @@ public class Body {
 		acelY = yForces / mass;*/
 
 		setAcel(xForces, yForces);
-		setPos(MathUtil.positionAfterStep(b, (double)elapsedTime/(double)nanosPerSecond));
-		setVel(MathUtil.velocityAfterStep(b, (double)elapsedTime/(double)nanosPerSecond));
+		setPos(MathUtil.positionAfterStep(this, t));
+		setVel(MathUtil.velocityAfterStep(this, t));
 	}
 	
 	private void setPos(double x, double y){
