@@ -68,6 +68,9 @@ public class Gravity implements Runnable{
 
 	private final long nanosPerSecond = 400000000L;
 	
+	private final long nanosPerStep = 100000L;
+	
+	private long stepcount = 0;
 
 	private HashSet<Body> bodies = new HashSet<Body>();
 	
@@ -185,7 +188,12 @@ public class Gravity implements Runnable{
 		}*/
 		while(running){
 			if(LOG) System.out.println("run() in while loop");
-			
+			long startTime = System.nanoTime();
+			stepcount++;
+			render();
+			updateBodies(nanosPerStep);
+			// collisions!!!
+			while(System.nanoTime()<startTime+nanosPerStep) Thread.yield();
 		}
 	}
 	
