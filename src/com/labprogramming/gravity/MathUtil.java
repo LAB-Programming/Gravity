@@ -30,6 +30,30 @@ public class MathUtil {
 		};
 	}
 	
+	public static double[] positionAfterStep(Body b, double t){
+		double v_x_0 = b.getVelX();
+		double v_y_0 = b.getVelY();
+		double x_0 = b.getX();
+		double y_0 = b.getY();
+		double a_x = b.getAcelX();
+		double a_y = b.getAcelY();
+		return new double[]{
+				x_0 + v_x_0*t + a_x*t*t,
+				y_0 + v_y_0*t + a_y*t*t,
+		};
+	}
+	
+	public static double[] velocityAfterStep(Body b, double t){
+		double v_x_0 = b.getVelX();
+		double v_y_0 = b.getVelY();
+		double a_x = b.getAcelX();
+		double a_y = b.getAcelY();
+		return new double[]{
+			v_x_0 + a_x*t,
+			v_y_0 + a_y*t,
+		};
+	}
+	
 	public static double sqr(double root) {
 		return pow(root, 2);
 	}

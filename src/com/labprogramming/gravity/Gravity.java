@@ -66,7 +66,8 @@ public class Gravity implements Runnable{
 
 	private long nanoTime;
 
-	private long nanosPerSecond = 10000000L;
+	private final long nanosPerSecond = 400000000L;
+	
 
 	private HashSet<Body> bodies = new HashSet<Body>();
 	
@@ -174,13 +175,17 @@ public class Gravity implements Runnable{
 	}
 	
 	public void run() {
-		while (running) {
+		/*while (running) {
 			if(LOG) System.out.println("run() in while loop");
 			long elapsedTime = System.nanoTime() - nanoTime;
 			nanoTime = System.nanoTime();
 			if(!paused) updateBodies(elapsedTime);
 			render();
 			Thread.yield();
+		}*/
+		while(running){
+			if(LOG) System.out.println("run() in while loop");
+			
 		}
 	}
 	
@@ -248,7 +253,10 @@ public class Gravity implements Runnable{
 			VectorUtil forces = getGravitationalForceOnBody(b);
 			double xForces = forces.getXMag();
 			double yForces = forces.getYMag();
-			b.update(elapsedTime, nanosPerSecond, xForces, yForces);
+			b.setAcel(xForces, yForces);
+			b.setPos(MathUtil.positionAfterStep(b, (double)elapsedTime/(double)nanosPerSecond));
+			b.setVel(MathUtil.velocityAfterStep(b, (double)elapsedTime/(double)nanosPerSecond));
+			//b.update(elapsedTime, nanosPerSecond, xForces, yForces);
 		}
 	}
 
@@ -403,7 +411,7 @@ public class Gravity implements Runnable{
 	 * Create the application.
 	 */
 	public Gravity() {
-		nanosPerSecond = readNanosPerSecond();
+		//nanosPerSecond = readNanosPerSecond();
 		if(LOG) System.out.println("nanosPerSecond = " + nanosPerSecond);
 		initialize();
 		width = frame.getWidth();

@@ -33,7 +33,7 @@ public class Body {
 		id = bodyCount++;
 	}
 
-	public void update(long timeElapsed, long nanosPerSecond, double xForces,
+	@Deprecated public void update(long timeElapsed, long nanosPerSecond, double xForces,
 			double yForces) {
 		double secondsElapsed = timeElapsed / nanosPerSecond;
 		x += velX * secondsElapsed + 1/2 * acelX * pow(secondsElapsed, 2);
@@ -42,6 +42,33 @@ public class Body {
 		velY += acelY * secondsElapsed;
 		acelX = xForces / mass;
 		acelY = yForces / mass;
+	}
+	
+	public void setPos(double x, double y){
+		this.x = x;
+		this.y = y;
+	}
+	
+	public void setVel(double x, double y){
+		this.velX = x;
+		this.velY = y;
+	}
+	
+	public void setAcel(double x, double y){
+		this.acelX = x;
+		this.acelY = y;
+	}
+
+	public void setPos(double[] pos) {
+		setPos(pos[0],pos[1]);
+	}
+	
+	public void setVel(double[] vel) {
+		setVel(vel[0],vel[1]);
+	}
+	
+	public void setAcel(double[] acel){
+		setAcel(acel[0],acel[1]);
 	}
 
 	/**
@@ -198,4 +225,5 @@ public class Body {
 	public String toString() {
 		return new String("Body #" + id + " at ("+x+", "+y+") with mass "+mass + " and radius "+getRadius());
 	}
+
 }
