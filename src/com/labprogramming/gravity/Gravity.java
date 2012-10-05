@@ -31,6 +31,7 @@ import java.io.FileWriter;
 import java.io.IOException;
 
 import java.util.Arrays;
+import java.util.HashMap;
 import java.util.HashSet;
 import java.util.NoSuchElementException;
 import java.util.Random;
@@ -79,6 +80,8 @@ public class Gravity implements Runnable{
 	//private VolatileImage img;
 
 	private boolean running = true;
+	
+	private final Renderer renderer;
 
 	/**
 	 * Launch the application.
@@ -190,45 +193,58 @@ public class Gravity implements Runnable{
 			if(LOG) System.out.println("run() in while loop");
 			long startTime = System.nanoTime();
 			stepcount++;
-			render();
+			renderer.start();
 			updateBodies(nanosPerStep);
 			// collisions!!!
 			while(System.nanoTime()<startTime+nanosPerStep) Thread.yield();
+			
 		}
 	}
 	
 	public void togglePause(){
 		paused=!paused;
 	}
+	
+	private void updateDisplay() {
+		if()
+		Window window = FULLSCREEN?device.getFullScreenWindow():frame;
+		if(window != null) {
+			BufferStrategy bs = window.getBufferStrategy();
+			
+		}
+	}
+	
+	class Renderer extends Thread {
 
-	private void render() {
-		if(LOG) System.out.println("rendering");
-		BufferStrategy bs = frame.getBufferStrategy();
-		int width = frame.getWidth();
-		int height = frame.getHeight();
-		if (bs == null) {
-			frame.createBufferStrategy(BUFFER_NUM);
-			bs = frame.getBufferStrategy();
-		}
-		/*if (img == null) {
-			img = frame.createVolatileImage(width, height);
-		}
-		Graphics g2 = img.createGraphics();*/
-		Graphics g2 = bs.getDrawGraphics();
-		try {
-			g2.clearRect(0, 0, width, height);
-			drawBodies(g2);
-		} finally {
-			g2.dispose();
-		}
+		private void render() {
+			if(LOG) System.out.println("rendering");
+			Window window = FULLSCREEN?device.getFullScreenWindow():frame;
+			BufferStrategy bs = window.getBufferStrategy();
+			int width = window.getWidth();
+			int height = window.getHeight();
+			if (bs == null) {
+				window.createBufferStrategy(BUFFER_NUM);
+				bs = window.getBufferStrategy();
+			}
+			/*if (img == null) {
+				img = frame.createVolatileImage(width, height);
+			}
+			Graphics g2 = img.createGraphics();*/
+			Graphics g2 = bs.getDrawGraphics();
+			try {
+				g2.clearRect(0, 0, width, height);
+				drawBodies(g2);
+			} finally {
+				g2.dispose();
+			}
 
-		/*Graphics g = bs.getDrawGraphics();
-		try {
-			g.drawImage(img, 0, 0, width, height, null);
-		} finally {
-			g.dispose();
-		}*/
-		bs.show();
+			/*Graphics g = bs.getDrawGraphics();
+			try {
+				g.drawImage(img, 0, 0, width, height, null);
+			} finally {
+				g.dispose();
+			}*/
+		}
 	}
 
 	private void drawBodies(Graphics g2) {
@@ -256,14 +272,22 @@ public class Gravity implements Runnable{
 				}
 			}
 		}
+		HashMap<Body,VectorUtil> changes = new HashMap<Body, VectorUtil>(bodies.size(),1); // Stores the VectorUtils created so that they can be applied all at once 
 		for (Body b : bodies){
 			if(LOG) System.out.println("Moving "+b);
 			VectorUtil forces = getGravitationalForceOnBody(b);
+			changes.put(b, forces);
+			/*double xForces = forces.getXMag();
+			double yForces = forces.getYMag();
+			b.setAcel(xForces, yForces);
+			b.setPos(MathUtil.positionAfterStep(b, (double)elapsedTime/(double)nanosPerSecond));
+			b.setVel(MathUtil.velocityAfterStep(b, (double)elapsedTime/(double)nanosPerSecond));
+			b.update((double)elapsedTime/(double)nanosPerSecond, xForces, yForces);*/
+		}
+		for(Body b : changes.keySet()) {
+			VectorUtil forces = changes.get(b);
 			double xForces = forces.getXMag();
 			double yForces = forces.getYMag();
-			/*b.setAcel(xForces, yForces);
-			b.setPos(MathUtil.positionAfterStep(b, (double)elapsedTime/(double)nanosPerSecond));
-			b.setVel(MathUtil.velocityAfterStep(b, (double)elapsedTime/(double)nanosPerSecond));*/
 			b.update((double)elapsedTime/(double)nanosPerSecond, xForces, yForces);
 		}
 	}
