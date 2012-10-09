@@ -82,6 +82,10 @@ public class Gravity implements Runnable{
 	private boolean running = true;
 	
 	private final Renderer renderer;
+	
+	private long waitTimeNanos = 0;
+	
+	private long delaysNum = 0;
 
 	/**
 	 * Launch the application.
@@ -115,8 +119,7 @@ public class Gravity implements Runnable{
 					randomBodies(app);
 					//collisionTest(app);
 					app.nanoTime = System.nanoTime();
-					Thread appRunner = new Thread(app);
-					appRunner.setName("Simulation Thread");
+					Thread appRunner = new Thread(app, "Simulation Thread");
 					appRunner.setPriority(Thread.MAX_PRIORITY);
 					appRunner.start();
 				} catch (Exception e) {
@@ -193,11 +196,20 @@ public class Gravity implements Runnable{
 			if(LOG) System.out.println("run() in while loop");
 			long startTime = System.nanoTime();
 			stepcount++;
-			renderer.start();
+			renderer.run();
 			updateBodies(nanosPerStep);
 			// collisions!!!
-			while(System.nanoTime()<startTime+nanosPerStep) Thread.yield();
 			
+			if(!(System.nanoTime() < startTime + nanosPerStep)) {
+				long curTime = System.nanoTime();
+				delaysNum++;
+				waitTimeNanos += curTime - (startTime + nanosPerStep);
+			}
+			while(System.nanoTime()<startTime+nanosPerStep) Thread.yield();
+			updateDisplay();
+			if(delaysNum > stepcount/20L && waitTimeNanos/delaysNum > 100000L) {
+				System.err.println("You got some serious lag problems!!!!");
+			}
 		}
 	}
 	
@@ -206,17 +218,29 @@ public class Gravity implements Runnable{
 	}
 	
 	private void updateDisplay() {
-		if()
-		Window window = FULLSCREEN?device.getFullScreenWindow():frame;
-		if(window != null) {
-			BufferStrategy bs = window.getBufferStrategy();
+		if(!renderer.isFinished()) {
 			
 		}
+			Window window = FULLSCREEN?device.getFullScreenWindow():frame;
+			if(window != null) {
+				BufferStrategy bs = window.getBufferStrategy();
+				if (!bs.contentsLost()) {
+					bs.show();
+				}
+			}
 	}
 	
 	class Renderer extends Thread {
-
-		private void render() {
+		
+		private volatile boolean doneRendering;
+		
+		public Renderer() {
+			super("Render Thread");
+			setDaemon(true);
+		}
+		
+		public void run() {
+			doneRendering = false;
 			if(LOG) System.out.println("rendering");
 			Window window = FULLSCREEN?device.getFullScreenWindow():frame;
 			BufferStrategy bs = window.getBufferStrategy();
@@ -226,10 +250,6 @@ public class Gravity implements Runnable{
 				window.createBufferStrategy(BUFFER_NUM);
 				bs = window.getBufferStrategy();
 			}
-			/*if (img == null) {
-				img = frame.createVolatileImage(width, height);
-			}
-			Graphics g2 = img.createGraphics();*/
 			Graphics g2 = bs.getDrawGraphics();
 			try {
 				g2.clearRect(0, 0, width, height);
@@ -237,27 +257,28 @@ public class Gravity implements Runnable{
 			} finally {
 				g2.dispose();
 			}
-
-			/*Graphics g = bs.getDrawGraphics();
-			try {
-				g.drawImage(img, 0, 0, width, height, null);
-			} finally {
-				g.dispose();
-			}*/
+			doneRendering = true;
 		}
-	}
-
-	private void drawBodies(Graphics g2) {
-		for (Body b : bodies) {
-			if(b.getMass()>0) g2.setColor(Color.CYAN);
-			else g2.setColor(Color.RED);
-			g2.fillOval(b.getIntX() + width / 2, b.getIntY() + height / 2,
-					(int)round(b.getRadius()), (int)round(b.getRadius()));
+		
+		private void drawBodies(Graphics g2) {
+			
+			for (Body b : bodies) {
+				if(b.getMass(true)>0) g2.setColor(Color.CYAN);
+				else g2.setColor(Color.RED);
+				int roundedRadius = (int) round(b.getRadius(true));
+				g2.fillOval(b.getIntX() + width / 2, b.getIntY() + height / 2,
+						roundedRadius, roundedRadius);
+			}
+			g2.setColor(Color.WHITE);
+			for (Body b : bodies) {
+				int roundedRadius = (int) round(b.getRadius(true));
+				g2.drawOval(b.getIntX() + width / 2, b.getIntY() + height / 2,
+						roundedRadius, roundedRadius);
+			}
 		}
-		g2.setColor(Color.WHITE);
-		for (Body b : bodies) {
-			g2.drawOval(b.getIntX() + width / 2, b.getIntY() + height / 2,
-					(int)round(b.getRadius()), (int)round(b.getRadius()));
+		
+		public boolean isFinished() {
+			return doneRendering;
 		}
 	}
 
@@ -448,6 +469,8 @@ public class Gravity implements Runnable{
 		initialize();
 		width = frame.getWidth();
 		height = frame.getHeight();
+		renderer = new Renderer();
+		renderer.start();
 	}
 
 	private long readNanosPerSecond() {

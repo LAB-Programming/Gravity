@@ -13,12 +13,15 @@ public class Body {
 
 	public static final double DENSITY = 1;
 	private double x;
+	private double oldX;
 	private double y;
+	private double oldY;
 	private double velX;
 	private double velY;
 	private double acelX = 0;
 	private double acelY = 0;
 	private double mass;
+	private double oldMass;
 	public HashSet<Body> collidingWith = new HashSet<Body>();
 	private final int id;
 	private static int bodyCount = 0;
@@ -30,6 +33,7 @@ public class Body {
 		this.velX = velX;
 		this.velY = velY;
 		this.mass = mass;
+		resetOldVars();
 		id = bodyCount++;
 	}
 
@@ -79,7 +83,7 @@ public class Body {
 	 * @return the x to int (for rendering)
 	 */
 	public int getIntX() {
-		return (int) round(x);
+		return (int) round(oldX);
 	}
 
 	/**
@@ -108,7 +112,7 @@ public class Body {
 	 * @return the y to int (for rendering)
 	 */
 	public int getIntY() {
-		return (int) round(y);
+		return (int) round(oldY);
 	}
 
 	/**
@@ -180,11 +184,14 @@ public class Body {
 	}
 
 	/**
+	 * @param forRender whether or not this is being called from the render thread
 	 * @return the mass
 	 */
-	public double getMass() {
-		return mass;
+	public double getMass(boolean forRender) {
+		return forRender ? oldMass : mass;
 	}
+	
+	public double getMass(){return getMass(false);}
 
 	/**
 	 * @param mass
@@ -194,14 +201,22 @@ public class Body {
 		this.mass = mass;
 	}
 	
-	public double getRadius(){
-		return sqrt(abs(mass)/(DENSITY*PI));
+	public double getRadius(boolean forRender){
+		return sqrt(abs(forRender ? oldMass :mass)/(DENSITY*PI));
 	}
+	
+	public double getRadius() {return getRadius(false);}
 	
 	public double distanceTo(Body b){
 		double xDiff=this.getX()-b.getX();
 		double yDiff=this.getY()-b.getY();
 		return hypot(xDiff,yDiff);
+	}
+	
+	public void resetOldVars() {
+		oldMass = mass;
+		oldX = x;
+		oldY = y;
 	}
 	
 	/*Didn't realise colliding with had been implemented
@@ -227,7 +242,7 @@ public class Body {
 
 	@Override
 	public String toString() {
-		return new String("Body #" + id + " at ("+x+", "+y+") with mass "+mass + " and radius "+getRadius());
+		return new String("Body #" + id + " at ("+x+", "+y+") with mass "+mass + " and radius "+getRadius(false));
 	}
 
 }
