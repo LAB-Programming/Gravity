@@ -205,6 +205,9 @@ public class Gravity implements Runnable{
 			waitTimeNanos += curTime - (theStartTime + nanosPerStep);
 		}
 		while(running){
+			for(Body b : bodies) {
+				b.resetOldVars();
+			}
 			if(LOG) System.out.println("run() in while loop");
 			long startTime = System.nanoTime();
 			stepcount++;
