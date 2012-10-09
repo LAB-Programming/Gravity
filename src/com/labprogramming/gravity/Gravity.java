@@ -192,6 +192,18 @@ public class Gravity implements Runnable{
 			render();
 			Thread.yield();
 		}*/
+		if(LOG) System.out.println("run() in while loop");
+		long theStartTime = System.nanoTime();
+		stepcount++;
+		renderer.start();
+		updateBodies(nanosPerStep);
+		// collisions!!!
+		
+		if(!(System.nanoTime() < theStartTime + nanosPerStep)) {
+			long curTime = System.nanoTime();
+			delaysNum++;
+			waitTimeNanos += curTime - (theStartTime + nanosPerStep);
+		}
 		while(running){
 			if(LOG) System.out.println("run() in while loop");
 			long startTime = System.nanoTime();
@@ -209,6 +221,7 @@ public class Gravity implements Runnable{
 			updateDisplay();
 			if(delaysNum > stepcount/20L && waitTimeNanos/delaysNum > 100000L) {
 				System.err.println("You got some serious lag problems!!!!");
+				System.err.println("Average delay = " + (waitTimeNanos/delaysNum));
 			}
 		}
 	}
@@ -219,15 +232,21 @@ public class Gravity implements Runnable{
 	
 	private void updateDisplay() {
 		if(!renderer.isFinished()) {
-			
-		}
-			Window window = FULLSCREEN?device.getFullScreenWindow():frame;
-			if(window != null) {
-				BufferStrategy bs = window.getBufferStrategy();
-				if (!bs.contentsLost()) {
-					bs.show();
-				}
+			System.err.println("Renderer is taking too long");
+			try {
+				renderer.join();
+			} catch (InterruptedException e) {
+				System.err.println("updateDisplay() was interrupted while waiting for renderer");
+				e.printStackTrace();
 			}
+		}
+		Window window = FULLSCREEN?device.getFullScreenWindow():frame;
+		if(window != null) {
+			BufferStrategy bs = window.getBufferStrategy();
+			if (!bs.contentsLost()) {
+				bs.show();
+			}
+		}
 	}
 	
 	class Renderer extends Thread {
@@ -470,7 +489,6 @@ public class Gravity implements Runnable{
 		width = frame.getWidth();
 		height = frame.getHeight();
 		renderer = new Renderer();
-		renderer.start();
 	}
 
 	private long readNanosPerSecond() {
