@@ -43,7 +43,7 @@ public class Body {
 		acelX = xForces / mass;
 		acelY = yForces / mass;*/
 
-		setAcel(xForces, yForces);
+		setAcel(xForces/mass, yForces/mass);
 		setPos(MathUtil.positionAfterStep(this, t));
 		setVel(MathUtil.velocityAfterStep(this, t));
 	}
