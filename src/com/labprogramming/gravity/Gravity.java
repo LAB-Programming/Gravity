@@ -46,7 +46,7 @@ public class Gravity implements Runnable{
 	
 	private static boolean LOG = false;
 	
-	public static final double G = Math.pow(0.0000000667384D,0.3); // newton's gravitational
+	public static final double G = Math.pow(0.667384D,0.3); // newton's gravitational
 														// Pg^-1 s^-2
 	private boolean is3D = false;
 	
