@@ -42,13 +42,13 @@ public class Gravity implements Runnable{
 	
 	private static final boolean GRAVITY = true;
 	
-	private boolean FULLSCREEN = false;
+	private boolean FULLSCREEN = true;
 	
-	private static boolean LOG = false;
+	private static boolean LOG = true;
 	
-	public static final double G = Math.pow(0.667384D,0.3); // newton's gravitational
+	public static final double G = 5000000*Math.pow(0.667384D,0.3); // newton's gravitational
 														// Pg^-1 s^-2
-	private boolean is3D = false;
+	private boolean is3D = true;
 	
 	public static final float FRICTION = GRAVITY?0.9999F:1;
 	
@@ -116,6 +116,7 @@ public class Gravity implements Runnable{
 					appRunner.setName("Simulation Thread");
 					appRunner.setPriority(Thread.MAX_PRIORITY);
 					appRunner.start();
+					appRunner.join();
 				} catch (Exception e) {
 					e.printStackTrace();
 				} finally {
@@ -127,13 +128,13 @@ public class Gravity implements Runnable{
 	}
 	
 	private static void randomBodies(Gravity app) {
-		int howManyBodies = r.nextInt(2)+2;
+		int howManyBodies = r.nextInt(300)+100;
 		for(int i=0;i<howManyBodies;i++){
 			int x = r.nextInt(app.width)-app.width/2;
 			int y = r.nextInt(app.height)-app.height/2;
-			int xv = r.nextInt(12)-6;
-			int yv = r.nextInt(12)-6;
-			double mass = r.nextDouble()*3000+5;
+			int xv = r.nextInt(100000)-50000;
+			int yv = r.nextInt(100000)-50000;
+			double mass = r.nextDouble()*30+5;
 			Body b = new Body(x,y,xv,yv,mass);
 			if(app.isInOtherBody(b)){
 				i--;
@@ -214,7 +215,8 @@ public class Gravity implements Runnable{
 			img = frame.createVolatileImage(width, height);
 		}
 		Graphics g2 = img.createGraphics();*/
-		Graphics g2 = bs.getDrawGraphics();
+		Graphics g2 = null;
+		g2 = bs.getDrawGraphics();
 		try {
 			g2.clearRect(0, 0, width, height);
 			drawBodies(g2);
@@ -236,12 +238,12 @@ public class Gravity implements Runnable{
 			if(b.getMass()>0) g2.setColor(Color.CYAN);
 			else g2.setColor(Color.RED);
 			g2.fillOval(b.getIntX() + width / 2, b.getIntY() + height / 2,
-					(int)round(b.getRadius()), (int)round(b.getRadius()));
+					(int)round(b.getRadius())*2, (int)round(b.getRadius())*2);
 		}
 		g2.setColor(Color.WHITE);
 		for (Body b : bodies) {
 			g2.drawOval(b.getIntX() + width / 2, b.getIntY() + height / 2,
-					(int)round(b.getRadius()), (int)round(b.getRadius()));
+					(int)round(b.getRadius())*2, (int)round(b.getRadius())*2);
 		}
 	}
 
@@ -299,8 +301,8 @@ public class Gravity implements Runnable{
 				if(LOG) System.out.println(b+" is colliding with "+b2);
 				b.collidingWith.add(b2);
 				b2.collidingWith.add(b);
-				//combine(b,b2); return true;
-				bounce(b,b2);
+				combine(b,b2); return true;
+				//bounce(b,b2);
 				// it is no accident that we return false even though we bounce, the return is suposed to symbolize
 				// weather or not we changed the list of bodies, which we didn't
 			}
@@ -336,8 +338,10 @@ public class Gravity implements Runnable{
 		//System.out.println("The collision")
 		double bColParaRelVel = bRelSpeed*sin(collisionDirection-bRelDirection); //The Relative Velocity of b parallel to the collision
 		double bColPerpRelVel = bRelSpeed*cos(collisionDirection-bRelDirection); //The Relative Velocity of b perpendicular to the collision
-		double bAfterColPerpRelVel = bColPerpRelVel*(b.getMass()-b2.getMass())/(b.getMass()+b2.getMass()); //The relative velocity of b after the collision perpendicular to the collision
-		double b2AfterColPerpRevVel = 2*b.getMass()*bColPerpRelVel/(b.getMass()+b2.getMass()); //The relative velocity of b2 after the collision perpendicular to the collision
+		double bAbsMass = b.getMass();//abs(b.getMass());
+		double b2AbsMass = b2.getMass();//abs(b2.getMass());
+		double bAfterColPerpRelVel = bColPerpRelVel*(bAbsMass-b2AbsMass)/(bAbsMass+b2AbsMass); //The relative velocity of b after the collision perpendicular to the collision
+		double b2AfterColPerpRevVel = 2*bAbsMass*bColPerpRelVel/(bAbsMass+b2AbsMass); //The relative velocity of b2 after the collision perpendicular to the collision
 		double bNewVelX = bAfterColPerpRelVel*cos(collisionDirection)+bColParaRelVel*cos(PI+collisionDirection)+b2.getVelX();
 		double bNewVelY = bAfterColPerpRelVel*sin(collisionDirection)+bColParaRelVel*sin(PI+collisionDirection)+b2.getVelY();
 		double b2NewVelX = b2AfterColPerpRevVel*cos(collisionDirection)+b2.getVelX();
