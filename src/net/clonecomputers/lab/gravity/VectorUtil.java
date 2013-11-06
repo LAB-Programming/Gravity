@@ -1,4 +1,4 @@
-package com.labprogramming.gravity;
+package net.clonecomputers.lab.gravity;
 
 import static java.lang.Math.atan2;
 import static java.lang.Math.hypot;
