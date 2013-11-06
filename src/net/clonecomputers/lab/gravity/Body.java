@@ -1,13 +1,8 @@
 package net.clonecomputers.lab.gravity;
 
-import static java.lang.Math.abs;
-import static java.lang.Math.hypot;
-import static java.lang.Math.PI;
-import static java.lang.Math.pow;
-import static java.lang.Math.round;
-import static java.lang.Math.sqrt;
-import java.util.HashSet;
-import java.util.Iterator;
+import static java.lang.Math.*;
+
+import java.util.*;
 
 public class Body {
 

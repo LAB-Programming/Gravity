@@ -1,42 +1,14 @@
 package net.clonecomputers.lab.gravity;
 
-import static java.lang.Math.PI;
-import static java.lang.Math.abs;
-import static java.lang.Math.atan2;
-import static java.lang.Math.cos;
-import static java.lang.Math.hypot;
-import static java.lang.Math.pow;
-import static java.lang.Math.round;
-import static java.lang.Math.sin;
-import static java.lang.Math.tan;
+import static java.lang.Math.*;
 
-import java.awt.Color;
-import java.awt.EventQueue;
-import java.awt.Graphics;
-import java.awt.GraphicsDevice;
-import java.awt.GraphicsEnvironment;
-import java.awt.Window;
-import java.awt.event.MouseEvent;
-import java.awt.event.MouseMotionListener;
-import java.awt.event.MouseListener;
-import java.awt.event.MouseAdapter;
-import java.awt.image.BufferStrategy;
+import java.awt.*;
+import java.awt.event.*;
+import java.awt.image.*;
+import java.io.*;
+import java.util.*;
 
-import java.io.BufferedReader;
-import java.io.BufferedWriter;
-import java.io.File;
-import java.io.FileNotFoundException;
-import java.io.FileReader;
-import java.io.FileWriter;
-import java.io.IOException;
-
-import java.util.Arrays;
-import java.util.HashSet;
-import java.util.NoSuchElementException;
-import java.util.Random;
-import java.util.Scanner;
-
-import javax.swing.JFrame;
+import javax.swing.*;
 
 public class Gravity implements Runnable{
 	
@@ -279,7 +251,7 @@ public class Gravity implements Runnable{
 		return checkForCollisionsWithOtherBodies(b);
 	}
 	
-	private void updateCollidingWith(Body b){
+	private static void updateCollidingWith(Body b){
 		HashSet<Body> doneCollidingWith=new HashSet<Body>();
 		for(Body temp:b.collidingWith){
 			if(temp == b) continue;
