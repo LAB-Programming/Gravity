@@ -1,10 +1,8 @@
-package com.labprogramming.gravity;
+package net.clonecomputers.lab.gravity;
 
-import static java.lang.Math.PI;
-import static java.lang.Math.abs;
-import static java.lang.Math.hypot;
-import static java.lang.Math.round;
-import static java.lang.Math.sqrt;
+import static java.lang.Math.*;
+
+import java.util.*;
 
 public class Body {
 
@@ -16,6 +14,10 @@ public class Body {
 	private double acelX = 0;
 	private double acelY = 0;
 	private double mass;
+	public HashSet<Body> collidingWith = new HashSet<Body>();
+	private final int id;
+	private static int bodyCount = 0;
+	//private boolean colliding = false;
 
 	public Body(double x, double y, double velX, double velY, double mass) {
 		this.x = x;
@@ -23,17 +25,49 @@ public class Body {
 		this.velX = velX;
 		this.velY = velY;
 		this.mass = mass;
+		id = bodyCount++;
 	}
 
-	public void update(long timeElapsed, long nanosPerSecond, double xForces,
+	public void update(double t, double xForces,
 			double yForces) {
-		double secondsElapsed = timeElapsed / nanosPerSecond;
-		x += velX * secondsElapsed;
-		y += velY * secondsElapsed;
+		/*double secondsElapsed = timeElapsed / nanosPerSecond;
+		x += velX * secondsElapsed + 1/2 * acelX * pow(secondsElapsed, 2);
+		y += velY * secondsElapsed + 1/2 * acelY * pow(secondsElapsed, 2);
 		velX += acelX * secondsElapsed;
 		velY += acelY * secondsElapsed;
 		acelX = xForces / mass;
-		acelY = xForces / mass;
+		acelY = yForces / mass;*/
+
+		setAcel(xForces/mass, yForces/mass);
+		setPos(MathUtil.positionAfterStep(this, t));
+		setVel(MathUtil.velocityAfterStep(this, t));
+	}
+	
+	private void setPos(double x, double y){
+		this.x = x;
+		this.y = y;
+	}
+	
+	private void setVel(double x, double y){
+		this.velX = x;
+		this.velY = y;
+	}
+	
+	private void setAcel(double x, double y){
+		this.acelX = x;
+		this.acelY = y;
+	}
+
+	private void setPos(double[] pos) {
+		setPos(pos[0],pos[1]);
+	}
+	
+	private void setVel(double[] vel) {
+		setVel(vel[0],vel[1]);
+	}
+	
+	private void setAcel(double[] acel){
+		setAcel(acel[0],acel[1]);
 	}
 
 	/**
@@ -156,7 +190,7 @@ public class Body {
 	}
 	
 	public double getRadius(){
-		return sqrt(abs(mass)/PI)*DENSITY;
+		return sqrt(abs(mass)/(DENSITY*PI));
 	}
 	
 	public double distanceTo(Body b){
@@ -164,9 +198,31 @@ public class Body {
 		double yDiff=this.getY()-b.getY();
 		return hypot(xDiff,yDiff);
 	}
+	
+	/*Didn't realise colliding with had been implemented
+	public boolean isColliding() {
+		return colliding;
+	}
+	
+	public Iterator<Body> getCollisionIterator() {
+		return collidingWith.iterator();
+	}
+	
+	public boolean addCollisionBody(Body b) {
+		colliding = true;
+		return collidingWith.add(b);
+	}
+	
+	public boolean removeCollisionBody(Body b) {
+		boolean result = collidingWith.remove(b);
+		if(collidingWith.isEmpty()) colliding = false;
+		return result;
+	}
+	*/
 
 	@Override
 	public String toString() {
-		return new String("Body at ("+x+", "+y+") with mass "+mass);
+		return new String("Body #" + id + " at ("+x+", "+y+") with mass "+mass + " and radius "+getRadius());
 	}
+
 }
