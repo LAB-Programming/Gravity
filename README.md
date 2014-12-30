@@ -6,8 +6,8 @@ gravitational forces in 2-Dimensions
 ##Known Bugs:
 * Method of closing currently doesn't work needs to be force quit.
 * I don't believe that G would be the same in 2D and 3D gravity
-* Bouncing / fusing doesn't to use the right bounding box
-* Bouncing off walls doesn't use the right bounding box
+* Program once again won't quit without force quitting due to apprunner.join() being called in AWT thread
+* Program freezes when the window is resized in windowed mode (probably due to reason mentioned above)
 
 ##Important Improvements:
 * More Interactability!!!!

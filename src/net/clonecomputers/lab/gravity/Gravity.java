@@ -14,7 +14,7 @@ public class Gravity implements Runnable{
 	
 	private static final boolean GRAVITY = true;
 	
-	private boolean FULLSCREEN = true;
+	private boolean FULLSCREEN = false;
 	
 	private static boolean LOG = true;
 	
@@ -82,6 +82,7 @@ public class Gravity implements Runnable{
 					//preset1(app);
 					//marsDeimosPreset(app);
 					randomBodies(app);
+					//windowedBoundsTest(app);
 					//collisionTest(app);
 					app.nanoTime = System.nanoTime();
 					Thread appRunner = new Thread(app);
@@ -141,6 +142,38 @@ public class Gravity implements Runnable{
 		app.bodies.add(new Body(-20, 0, -4, 0, 300));
 		app.bodies.add(new Body(20, 0, 4, 0, 300));
 	}
+	
+	@SuppressWarnings("unused")
+	private static void windowedBoundsTest(Gravity app) {
+		double mass = 484*PI; // this is so radius = 22 (menubar height on mac osx sl)
+		double minX = -app.width/2D;
+		double minY = -app.height/2D;
+		double midX = -0.5;
+		double midY = -0.5;
+		double maxX = app.width/2D - 1;
+		double maxY = app.height/2D - 1;
+		double qt1X = (minX + midX)/2; // 1/4 x position
+		double qt1Y = (minY + midY)/2; // 1/4 y position
+		double qt3X = (midX + maxX)/2; // 3/4 x position
+		double qt3Y = (midY + maxY)/2; // 3/4 y position
+		
+		//reference points
+		app.bodies.add(new Body(minX, minY, 0, 0, mass));
+		app.bodies.add(new Body(midX, minY, 0, 0, mass));
+		app.bodies.add(new Body(maxX, minY, 0, 0, mass));
+		app.bodies.add(new Body(minX, midY, 0, 0, mass));
+		app.bodies.add(new Body(midX, midY, 0, 0, mass));
+		app.bodies.add(new Body(maxY, midY, 0, 0, mass));
+		app.bodies.add(new Body(minX, maxY, 0, 0, mass));
+		app.bodies.add(new Body(midX, maxY, 0, 0, mass));
+		app.bodies.add(new Body(maxX, maxY, 0, 0, mass));
+		
+		//bounds testers
+		app.bodies.add(new Body(qt1X, qt1Y, app.width*8, 0, mass));
+		app.bodies.add(new Body(qt3X, qt1Y, 0, app.height*8, mass));
+		app.bodies.add(new Body(qt1X, qt3Y, 0, -app.height*8, mass));
+		app.bodies.add(new Body(qt3X, qt3Y, -app.width*8, 0, mass));
+	}
 
 
 	private boolean isInOtherBody(Body b) {
@@ -177,8 +210,9 @@ public class Gravity implements Runnable{
 	private void render() {
 		if(LOG) System.out.println("rendering");
 		BufferStrategy bs = frame.getBufferStrategy();
-		int width = frame.getWidth();
-		int height = frame.getHeight();
+		// we must use root pane dimensions so menubar is excluded windowed mode
+		int width = frame.getRootPane().getWidth();
+		int height = frame.getRootPane().getHeight();
 		if (bs == null) {
 			frame.createBufferStrategy(BUFFER_NUM);
 			bs = frame.getBufferStrategy();
@@ -189,6 +223,18 @@ public class Gravity implements Runnable{
 		Graphics g2 = img.createGraphics();*/
 		Graphics g2 = null;
 		g2 = bs.getDrawGraphics();
+		
+		// move origin of graphics so that we don't end up drawing behind menubar in windowed mode
+		g2.translate(frame.getRootPane().getX(), frame.getRootPane().getY());
+		if (LOG && !FULLSCREEN) {
+			System.out.println("(width,height) = (" + width + "," + height + ")");
+			System.out.println("JFrame: " + frame);
+			System.out.println("JFrame bounds: " + frame.getBounds());
+			System.out.println("Content Pane: " + frame.getContentPane());
+			System.out.println("Content Pane bounds: " + frame.getContentPane().getBounds());
+			System.out.println("Root Pane: " + frame.getRootPane());
+			System.out.println("Root Pane bounds: " + frame.getRootPane().getBounds());
+		}
 		try {
 			g2.clearRect(0, 0, width, height);
 			drawBodies(g2);
@@ -209,13 +255,15 @@ public class Gravity implements Runnable{
 		for (Body b : bodies) {
 			if(b.getMass()>0) g2.setColor(Color.CYAN);
 			else g2.setColor(Color.RED);
-			g2.fillOval(b.getIntX() + width / 2, b.getIntY() + height / 2,
-					(int)round(b.getRadius())*2, (int)round(b.getRadius())*2);
+			g2.fillOval((int) round(b.getX() + width/2D - b.getRadius()),
+					(int) round(b.getY() + height/2D - b.getRadius()),
+					(int) round(b.getRadius()*2), (int)round(b.getRadius()*2));
 		}
 		g2.setColor(Color.WHITE);
 		for (Body b : bodies) {
-			g2.drawOval(b.getIntX() + width / 2, b.getIntY() + height / 2,
-					(int)round(b.getRadius())*2, (int)round(b.getRadius())*2);
+			g2.drawOval((int) round(b.getX() + width/2D - b.getRadius()),
+					(int) round(b.getY() + height/2D - b.getRadius()),
+					(int) round(b.getRadius()*2), (int)round(b.getRadius()*2));
 		}
 	}
 
@@ -350,16 +398,16 @@ public class Gravity implements Runnable{
 	}
 	
 	private void checkForCollisionsWithWall(Body b) {
-		if (b.getVelX() <= 0 && b.getIntX() - b.getRadius() <= -width / 2) {
+		if (b.getVelX() <= 0 && b.getIntX() - b.getRadius() <= -width/2) {
 			b.setVelX( (abs(b.getVelX()) * pow(FRICTION, getMassSum())));
 		}
-		if (b.getVelX() >= 0 && b.getIntX() + b.getRadius() >= width / 2) {
+		if (b.getVelX() >= 0 && b.getIntX() + b.getRadius() >= width/2 - 1) {
 			b.setVelX(-1 *  (abs(b.getVelX()) * pow(FRICTION, getMassSum())));
 		}
-		if (b.getVelY() <= 0 && b.getIntY() - b.getRadius() <= -height / 2) {
+		if (b.getVelY() <= 0 && b.getIntY() - b.getRadius() <= -height/2) {
 			b.setVelY( (abs(b.getVelY()) * pow(FRICTION, getMassSum())));
 		}
-		if (b.getVelY() >= 0 && b.getIntY() + b.getRadius() >= height / 2) {
+		if (b.getVelY() >= 0 && b.getIntY() + b.getRadius() >= height/2 - 1) {
 			b.setVelY(-1 *  (abs(b.getVelY()) * pow(FRICTION, getMassSum())));
 		}
 	}
@@ -398,8 +446,9 @@ public class Gravity implements Runnable{
 		//nanosPerSecond = readNanosPerSecond();
 		if(LOG) System.out.println("nanosPerSecond = " + nanosPerSecond);
 		initialize();
-		width = frame.getWidth();
-		height = frame.getHeight();
+		// we must use root pane dimensions so menubar is excluded windowed mode
+		width = frame.getRootPane().getWidth();
+		height = frame.getRootPane().getHeight();
 	}
 
 	private long readNanosPerSecond() {
