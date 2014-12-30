@@ -89,11 +89,8 @@ public class Gravity implements Runnable{
 					appRunner.setName("Simulation Thread");
 					appRunner.setPriority(Thread.MAX_PRIORITY);
 					appRunner.start();
-					appRunner.join();
 				} catch (Exception e) {
 					e.printStackTrace();
-				} finally {
-					app.close();
 				}
 			}
 
@@ -192,14 +189,20 @@ public class Gravity implements Runnable{
 			render();
 			Thread.yield();
 		}*/
-		while(running){
-			if(LOG) System.out.println("run() in while loop");
-			long startTime = System.nanoTime();
-			stepcount++;
-			render();
-			updateBodies(nanosPerStep);
-			// collisions!!!
-			while(System.nanoTime()<startTime+nanosPerStep) Thread.yield();
+		try {
+			while(running){
+				if(LOG) System.out.println("run() in while loop");
+				long startTime = System.nanoTime();
+				stepcount++;
+				render();
+				updateBodies(nanosPerStep);
+				// collisions!!!
+				while(System.nanoTime()<startTime+nanosPerStep) Thread.yield();
+			}
+		} catch (RuntimeException e) {
+			e.printStackTrace();
+		} finally {
+			close();
 		}
 	}
 	
