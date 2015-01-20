@@ -14,11 +14,11 @@ public class Gravity implements Runnable{
 	
 	private static final boolean GRAVITY = true;
 	
-	private boolean FULLSCREEN = false;
+	private boolean FULLSCREEN = true;
 	
 	private static boolean LOG = false;
 
-	private double numDimensions = 3;
+	private double numDimensions = 2;
 	
 	public final double G = Math.pow(5000000*Math.pow(0.667384D,0.3), numDimensions / 3); // newton's gravitational
 														// Pg^-1 s^-2
@@ -36,11 +36,16 @@ public class Gravity implements Runnable{
 
 	private JFrame frame;
 
-	private long nanoTime;
+	//private long nanoTime;
 
-	private final long nanosPerSecond = 400000000L;
+	//private final long nanosPerSecond = 400000000L;
 	
-	private final long nanosPerStep = 100000L;
+	//private final long nanosPerStep = 100000L;
+	
+	private double fps = 15;
+	
+	private double timeRatio = 1e-12;
+	// sim time / real time
 	
 	private long stepcount = 0;
 
@@ -86,7 +91,7 @@ public class Gravity implements Runnable{
 					randomBodies(app);
 					//windowedBoundsTest(app);
 					//collisionTest(app);
-					app.nanoTime = System.nanoTime();
+					//app.nanoTime = System.nanoTime();
 					Thread appRunner = new Thread(app);
 					appRunner.setName("Simulation Thread");
 					appRunner.setPriority(Thread.MAX_PRIORITY);
@@ -192,14 +197,31 @@ public class Gravity implements Runnable{
 			Thread.yield();
 		}*/
 		try {
+			int stepsPerFrame = 1;
+			double nanosPerFrame = (1e9 / fps);
 			while(running){
 				if(LOG) System.out.println("run() in while loop");
-				long startTime = System.nanoTime();
-				stepcount++;
+				long frameStart = System.nanoTime();
 				render();
-				updateBodies(nanosPerStep);
-				// collisions!!!
-				while(System.nanoTime()<startTime+nanosPerStep) Thread.yield();
+				long stepStart = System.nanoTime();
+				int stepsThisFrame = 0;
+				do {
+					updateBodies(nanosPerFrame / stepsPerFrame);
+					stepsThisFrame++;
+					stepcount++;
+				} while(stepsThisFrame < stepsPerFrame);
+				long frameEnd = System.nanoTime();
+				long nanosThisFrame= frameEnd - frameStart;
+				long nanosSteppingThisFrame = frameEnd - stepStart;
+				double nanosLeft = nanosPerFrame - nanosThisFrame;
+				double nanosPerStep = nanosSteppingThisFrame / stepsThisFrame;
+				if(nanosThisFrame > nanosPerFrame) {
+					System.err.printf("Can't keep up (%d steps took %.3f ms, expected %.3f ms)\n", stepsThisFrame, nanosThisFrame/1e6, nanosPerFrame/1e6);
+					Thread.yield();
+				}
+				System.out.printf("%d steps took %.3f ms, expected %.3f ms (had %.3f ms left, at %.3f ms per step we could have done %.3f more)\n", 
+						stepsThisFrame, nanosThisFrame/1e6, nanosPerFrame/1e6, nanosLeft/1e6, nanosPerStep/1e6, nanosLeft / nanosPerStep);
+				stepsPerFrame = (int) (stepsThisFrame + (nanosLeft / nanosPerStep));
 			}
 		} catch (RuntimeException e) {
 			e.printStackTrace();
@@ -272,7 +294,7 @@ public class Gravity implements Runnable{
 		}
 	}
 
-	private void updateBodies(long elapsedTime) {
+	private void updateBodies(double elapsedTime) {
 		boolean finishedColliding=false;
 		while(!finishedColliding){
 			finishedColliding=true;
@@ -291,7 +313,7 @@ public class Gravity implements Runnable{
 			/*b.setAcel(xForces, yForces);
 			b.setPos(MathUtil.positionAfterStep(b, (double)elapsedTime/(double)nanosPerSecond));
 			b.setVel(MathUtil.velocityAfterStep(b, (double)elapsedTime/(double)nanosPerSecond));*/
-			b.update((double)elapsedTime/(double)nanosPerSecond, xForces, yForces);
+			b.update(elapsedTime * timeRatio, xForces, yForces);
 		}
 	}
 
@@ -449,72 +471,11 @@ public class Gravity implements Runnable{
 	 */
 	public Gravity() {
 		//nanosPerSecond = readNanosPerSecond();
-		if(LOG) System.out.println("nanosPerSecond = " + nanosPerSecond);
+		//if(LOG) System.out.println("nanosPerSecond = " + nanosPerSecond);
 		initialize();
 		// we must use root pane dimensions so menubar is excluded windowed mode
 		width = frame.getRootPane().getWidth();
 		height = frame.getRootPane().getHeight();
-	}
-
-	private long readNanosPerSecond() {
-		File file = new File("nanos.txt");
-		if(!file.exists()) {
-			try {
-				if(!file.createNewFile()) throw new IOException("I thought I checked that the file didn't exist!!!");
-			} catch (IOException ioe) {
-				System.err.println("IOException while attempting to create nano.txt");
-				ioe.printStackTrace();
-			}
-			BufferedWriter writer = null;
-			try {
-				writer = new BufferedWriter(new FileWriter(file));
-			} catch(IOException ioe) {
-				System.err.println("Failed to open nanos.txt");
-				ioe.printStackTrace();
-			}
-			try {
-				writer.write("" + nanosPerSecond);
-				writer.flush();
-			} catch (IOException ioe) {
-				System.err.println("Failed to write default value to file");
-				System.err.println("Deleting file...");
-				if(file.delete()) {
-					System.err.println("nanos.txt deleted!");
-				} else {
-					System.err.println("Arggh! Failed to delete file!");
-				}
-				ioe.printStackTrace();
-			}
-			try {
-				writer.close();
-			} catch (IOException ioe) {
-				System.err.println("the write stream has failed to close! VERY BAD THING!");
-				ioe.printStackTrace();
-			}
-			return nanosPerSecond;
-		}else if(!file.isFile() || !file.canRead()) {
-			System.err.println("a nanos.txt already exists but is not readable and/or is not a file");
-			return nanosPerSecond;
-		} else {
-			Scanner reader = null;
-			try {
-				reader = new Scanner(new BufferedReader(new FileReader(file)));
-			} catch (FileNotFoundException e) {
-				System.err.println("How the hell did this happen!! I checked to make sure the file was there!");
-				e.printStackTrace();
-				return nanosPerSecond;
-			}
-			Long nanos = null;
-			try {
-				nanos = reader.nextLong();
-				if(nanos <= 0) throw new NoSuchElementException();
-			} catch(NoSuchElementException nsee) {
-				System.err.println("No valid values found for nanos per second (a number greater than 0 and within range of the long)");
-				return nanosPerSecond;
-			}
-			reader.close();
-			return nanos;
-		}
 	}
 
 	/**
@@ -539,9 +500,9 @@ public class Gravity implements Runnable{
 					}
 
 					@Override
-					public void mouseMoved(MouseEvent arg0) {
+					public void mouseMoved(MouseEvent e) {
 						//if(LOG) System.out.println("mouseMoved");
-						if (arg0.getX() == 0) {
+						if (e.getX() == 0) {
 							//running = false;
 						}
 					}
