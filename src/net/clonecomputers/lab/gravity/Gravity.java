@@ -16,12 +16,12 @@ public class Gravity implements Runnable{
 	
 	private boolean FULLSCREEN = false;
 	
-	private static boolean LOG = true;
+	private static boolean LOG = false;
+
+	private double numDimensions = 3;
 	
-	public static final double G = 5000000*Math.pow(0.667384D,0.3); // newton's gravitational
+	public final double G = Math.pow(5000000*Math.pow(0.667384D,0.3), numDimensions / 3); // newton's gravitational
 														// Pg^-1 s^-2
-	private boolean is3D = true;
-	
 	public static final float FRICTION = GRAVITY?0.9999F:1;
 	
 	public static final int BUFFER_NUM = 10;
@@ -76,7 +76,9 @@ public class Gravity implements Runnable{
 						}
 						if(Arrays.binarySearch(args, "3D") >= 0) {
 							if(LOG) System.out.println("3D Gravity Calculations = true");
-							app.is3D = true;
+							app.numDimensions = 3;
+						} else {
+							app.numDimensions = 2;
 						}
 					}
 					//preset1(app);
@@ -434,7 +436,7 @@ public class Gravity implements Runnable{
 			double yDiff = b2.getY() - b.getY();
 			double d = hypot(xDiff, yDiff);
 			double force = G
-					* (b.getMass() * b2.getMass() / (is3D ? d * d : d));
+					* (b.getMass() * b2.getMass() / Math.pow(d, numDimensions - 1));
 			VectorUtil forces = new VectorUtil(force, d, xDiff, yDiff);
 			xForceSum += forces.getXMag();
 			yForceSum += forces.getYMag();
