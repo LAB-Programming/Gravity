@@ -24,7 +24,7 @@ public class Gravity implements Runnable{
 														// Pg^-1 s^-2
 	public static final float FRICTION = GRAVITY?0.9999F:1;
 	
-	public static final int BUFFER_NUM = 10;
+	public static final int BUFFER_NUM = 2;
 
 	private static Random r = new Random();
 	
