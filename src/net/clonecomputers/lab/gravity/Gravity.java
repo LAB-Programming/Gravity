@@ -5,7 +5,7 @@ import static java.lang.Math.*;
 import java.awt.*;
 import java.awt.event.*;
 import java.awt.image.*;
-import java.io.*;
+import java.lang.reflect.*;
 import java.util.*;
 
 import javax.swing.*;
@@ -35,20 +35,12 @@ public class Gravity implements Runnable{
 	private GraphicsDevice device;
 
 	private JFrame frame;
-
-	//private long nanoTime;
-
-	//private final long nanosPerSecond = 400000000L;
 	
-	//private final long nanosPerStep = 100000L;
+	private double fps = 30;
 	
-	private double fps = 15;
-	
-	private double timeRatio = 1e-12;
+	private double timeRatio = 3e-11;
 	// sim time / real time
 	
-	private long stepcount = 0;
-
 	private HashSet<Body> bodies = new HashSet<Body>();
 	
 	private boolean paused=false;
@@ -59,49 +51,47 @@ public class Gravity implements Runnable{
 
 	/**
 	 * Launch the application.
+	 * @throws InvocationTargetException 
+	 * @throws InterruptedException 
 	 */
-	public static void main(final String[] args) {
-		EventQueue.invokeLater(new Runnable() {
+	public static void main(final String[] args) throws InterruptedException, InvocationTargetException {
+		final Gravity app = new Gravity();
+		EventQueue.invokeAndWait(new Runnable() {
 			@Override
 			public void run() {
-				Gravity app = new Gravity();
-				try {
-					if (args.length > 0) {
-						Arrays.sort(args);
-						if(Arrays.binarySearch(args, "LOG") >= 0) {
-							System.out.println("Logging is on!");
-							LOG = true;
-						}if(Arrays.binarySearch(args, "NOLOG") >= 0) {
-							System.out.println("Logging is off!");
-							LOG = false;
-						}
-						if(Arrays.binarySearch(args, "FULLSCREEN") >= 0) {
-							if(LOG) System.out.println("FULLSCREEN = true");
-							app.FULLSCREEN = true;
-						}
-						if(Arrays.binarySearch(args, "3D") >= 0) {
-							if(LOG) System.out.println("3D Gravity Calculations = true");
-							app.numDimensions = 3;
-						} else {
-							app.numDimensions = 2;
-						}
+				if (args.length > 0) {
+					Arrays.sort(args);
+					if(Arrays.binarySearch(args, "LOG") >= 0) {
+						System.out.println("Logging is on!");
+						LOG = true;
+					}if(Arrays.binarySearch(args, "NOLOG") >= 0) {
+						System.out.println("Logging is off!");
+						LOG = false;
 					}
-					//preset1(app);
-					//marsDeimosPreset(app);
-					randomBodies(app);
-					//windowedBoundsTest(app);
-					//collisionTest(app);
-					//app.nanoTime = System.nanoTime();
-					Thread appRunner = new Thread(app);
-					appRunner.setName("Simulation Thread");
-					appRunner.setPriority(Thread.MAX_PRIORITY);
-					appRunner.start();
-				} catch (Exception e) {
-					e.printStackTrace();
+					if(Arrays.binarySearch(args, "FULLSCREEN") >= 0) {
+						if(LOG) System.out.println("FULLSCREEN = true");
+						app.FULLSCREEN = true;
+					}
+					if(Arrays.binarySearch(args, "3D") >= 0) {
+						if(LOG) System.out.println("3D Gravity Calculations = true");
+						app.numDimensions = 3;
+					} else {
+						app.numDimensions = 2;
+					}
 				}
+				//preset1(app);
+				//marsDeimosPreset(app);
+				randomBodies(app);
+				//windowedBoundsTest(app);
+				//collisionTest(app);
+				//app.nanoTime = System.nanoTime();
+				//Thread appRunner = new Thread(app);
+				//appRunner.setName("Simulation Thread");
+				//appRunner.setPriority(Thread.MAX_PRIORITY);
+				//appRunner.start();
 			}
-
 		});
+		app.run();
 	}
 	
 	private static void randomBodies(Gravity app) {
@@ -187,6 +177,7 @@ public class Gravity implements Runnable{
 		return false;
 	}
 	
+	@Override
 	public void run() {
 		/*while (running) {
 			if(LOG) System.out.println("run() in while loop");
@@ -208,20 +199,20 @@ public class Gravity implements Runnable{
 				do {
 					updateBodies(nanosPerFrame / stepsPerFrame);
 					stepsThisFrame++;
-					stepcount++;
 				} while(stepsThisFrame < stepsPerFrame);
 				long frameEnd = System.nanoTime();
 				long nanosThisFrame= frameEnd - frameStart;
 				long nanosSteppingThisFrame = frameEnd - stepStart;
 				double nanosLeft = nanosPerFrame - nanosThisFrame;
 				double nanosPerStep = nanosSteppingThisFrame / stepsThisFrame;
-				if(nanosThisFrame > nanosPerFrame) {
-					System.err.printf("Can't keep up (%d steps took %.3f ms, expected %.3f ms)\n", stepsThisFrame, nanosThisFrame/1e6, nanosPerFrame/1e6);
+				if(nanosThisFrame - nanosPerFrame > 5e6) {
+					System.err.printf("Can't keep up (took %.3f ms, expected %.3f ms)\n", nanosThisFrame/1e6, nanosPerFrame/1e6);
 					Thread.yield();
 				}
-				System.out.printf("%d steps took %.3f ms, expected %.3f ms (had %.3f ms left, at %.3f ms per step we could have done %.3f more)\n", 
-						stepsThisFrame, nanosThisFrame/1e6, nanosPerFrame/1e6, nanosLeft/1e6, nanosPerStep/1e6, nanosLeft / nanosPerStep);
+				if(LOG) System.out.printf("Render took %.3f ms, %d steps took %.3f ms for %.3f ms total of an expected %.3f ms (had %.3f ms left, at %.3f ms per step we could have done %.3f more)\n", 
+						(stepStart - frameStart)/1e6, stepsThisFrame, nanosSteppingThisFrame/1e6, nanosThisFrame/1e6, nanosPerFrame/1e6, nanosLeft/1e6, nanosPerStep/1e6, nanosLeft / nanosPerStep);
 				stepsPerFrame = (int) (stepsThisFrame + (nanosLeft / nanosPerStep));
+				if(stepsPerFrame == 0) stepsPerFrame = 1;
 			}
 		} catch (RuntimeException e) {
 			e.printStackTrace();

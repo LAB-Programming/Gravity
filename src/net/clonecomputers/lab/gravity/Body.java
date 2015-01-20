@@ -38,9 +38,13 @@ public class Body {
 		acelX = xForces / mass;
 		acelY = yForces / mass;*/
 
+		if(Double.isNaN(x+y+velX+velY+acelX+acelY)) throw new IllegalStateException("something is NaN");
 		setAcel(xForces/mass, yForces/mass);
+		if(Double.isNaN(x+y+velX+velY+acelX+acelY)) throw new IllegalStateException("something is NaN");
 		setPos(MathUtil.positionAfterStep(this, t));
+		if(Double.isNaN(x+y+velX+velY+acelX+acelY)) throw new IllegalStateException("something is NaN");
 		setVel(MathUtil.velocityAfterStep(this, t));
+		if(Double.isNaN(x+y+velX+velY+acelX+acelY)) throw new IllegalStateException("something is NaN");
 	}
 	
 	private void setPos(double x, double y){
