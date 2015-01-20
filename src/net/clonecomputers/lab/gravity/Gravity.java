@@ -18,7 +18,7 @@ public class Gravity implements Runnable{
 	
 	private static boolean LOG = false;
 
-	private double numDimensions = 2;
+	private double numDimensions = 3;
 	
 	public final double G = Math.pow(5000000*Math.pow(0.667384D,0.3), numDimensions / 3); // newton's gravitational
 														// Pg^-1 s^-2
