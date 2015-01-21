@@ -98,7 +98,6 @@ public class Gravity implements Runnable{
 		double retVal;
 		do {
 			retVal = r.nextGaussian()*sigma + mean;
-			System.out.println(retVal);
 		} while(retVal < 0 && !onlyPositive);
 		return retVal;
 	}
