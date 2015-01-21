@@ -20,7 +20,10 @@ gravitational forces in 2-Dimensions
 * Should be more easily configurable
     * Every setting should be set-able without editing the source code
 * Ability to configure and restart new simulation while running
-* Make it even more awesome
+* Refactor code to be better
+    * STOP USING SO MANY DAMN GLOBALS
+    * More classes, less God object
+* Make it even more awesome in ways we don't even know yet
 
 
 ##Done
