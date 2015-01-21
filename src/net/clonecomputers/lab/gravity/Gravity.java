@@ -81,7 +81,7 @@ public class Gravity implements Runnable{
 				}
 				//preset1(app);
 				//marsDeimosPreset(app);
-				randomBodies(app);
+				app.randomBodies(200,100,  0,1000,  30,15,  true);
 				//windowedBoundsTest(app);
 				//collisionTest(app);
 				//app.nanoTime = System.nanoTime();
@@ -94,21 +94,34 @@ public class Gravity implements Runnable{
 		app.run();
 	}
 	
-	private static void randomBodies(Gravity app) {
-		int howManyBodies = r.nextInt(300)+100;
+	private static double gaussian(Random r, double mean, double sigma, boolean onlyPositive) {
+		double retVal;
+		do {
+			retVal = r.nextGaussian()*sigma + mean;
+			System.out.println(retVal);
+		} while(retVal < 0 && !onlyPositive);
+		return retVal;
+	}
+	
+	private static int gaussianInt(Random r, double mean, double sigma, boolean onlyPositive) {
+		return (int)gaussian(r, mean, sigma, onlyPositive);
+	}
+	
+	private void randomBodies(double numBodiesMean, double numBodiesSigma, double velocityMean, double velocitySigma, double massMean, double massSigma, boolean onlyPositiveMass) {
+		int howManyBodies = gaussianInt(r, numBodiesMean, numBodiesSigma, true);
 		for(int i=0;i<howManyBodies;i++){
-			int x = r.nextInt(app.width)-app.width/2;
-			int y = r.nextInt(app.height)-app.height/2;
-			int xv = r.nextInt(100000)-50000;
-			int yv = r.nextInt(100000)-50000;
-			double mass = r.nextDouble()*30+5;
+			double x = r.nextDouble()*width - (width/2d);
+			double y = r.nextDouble()*height - (height/2d);
+			double xv = gaussian(r, velocityMean, velocitySigma, false);
+			double yv = gaussian(r, velocityMean, velocitySigma, false);
+			double mass = gaussian(r, massMean, massSigma, onlyPositiveMass);
 			Body b = new Body(x,y,xv,yv,mass);
-			if(app.isInOtherBody(b)){
+			if(isInOtherBody(b)){
 				i--;
 				continue;
 			}
 			if(LOG) System.out.println("Creating "+b);
-			app.bodies.add(b);
+			bodies.add(b);
 		}
 	}
 
@@ -207,10 +220,12 @@ public class Gravity implements Runnable{
 				double nanosPerStep = nanosSteppingThisFrame / stepsThisFrame;
 				if(nanosThisFrame - nanosPerFrame > 5e6) {
 					System.err.printf("Can't keep up (took %.3f ms, expected %.3f ms)\n", nanosThisFrame/1e6, nanosPerFrame/1e6);
-					Thread.yield();
+					if(LOG) Thread.yield();
 				}
-				if(LOG) System.out.printf("Render took %.3f ms, %d steps took %.3f ms for %.3f ms total of an expected %.3f ms (had %.3f ms left, at %.3f ms per step we could have done %.3f more)\n", 
-						(stepStart - frameStart)/1e6, stepsThisFrame, nanosSteppingThisFrame/1e6, nanosThisFrame/1e6, nanosPerFrame/1e6, nanosLeft/1e6, nanosPerStep/1e6, nanosLeft / nanosPerStep);
+				if(LOG) {
+					System.out.printf("Render took %.3f ms, %d steps took %.3f ms for %.3f ms total of an expected %.3f ms (had %.3f ms left, at %.3f ms per step we could have done %.3f more)\n", 
+							(stepStart - frameStart)/1e6, stepsThisFrame, nanosSteppingThisFrame/1e6, nanosThisFrame/1e6, nanosPerFrame/1e6, nanosLeft/1e6, nanosPerStep/1e6, nanosLeft / nanosPerStep);
+				}
 				stepsPerFrame = (int) (stepsThisFrame + (nanosLeft / nanosPerStep));
 				if(stepsPerFrame == 0) stepsPerFrame = 1;
 			}
