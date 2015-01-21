@@ -39,7 +39,7 @@ public class Body {
 		acelY = yForces / mass;*/
 
 		if(Double.isNaN(x+y+velX+velY+acelX+acelY)) throw new IllegalStateException("something is NaN");
-		setAcel(xForces/mass, yForces/mass);
+		setAcel(xForces/abs(mass), yForces/abs(mass));
 		if(Double.isNaN(x+y+velX+velY+acelX+acelY)) throw new IllegalStateException("something is NaN");
 		setPos(MathUtil.positionAfterStep(this, t));
 		if(Double.isNaN(x+y+velX+velY+acelX+acelY)) throw new IllegalStateException("something is NaN");
