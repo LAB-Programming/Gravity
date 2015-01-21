@@ -423,23 +423,23 @@ public class Gravity implements Runnable{
 	
 	private void checkForCollisionsWithWall(Body b) {
 		if (b.getVelX() <= 0 && b.getIntX() - b.getRadius() <= -width/2) {
-			b.setVelX( (abs(b.getVelX()) * pow(FRICTION, getMassSum())));
+			b.setVelX( (abs(b.getVelX()) * pow(FRICTION, getMassEnergy())));
 		}
 		if (b.getVelX() >= 0 && b.getIntX() + b.getRadius() >= width/2 - 1) {
-			b.setVelX(-1 *  (abs(b.getVelX()) * pow(FRICTION, getMassSum())));
+			b.setVelX(-1 *  (abs(b.getVelX()) * pow(FRICTION, getMassEnergy())));
 		}
 		if (b.getVelY() <= 0 && b.getIntY() - b.getRadius() <= -height/2) {
-			b.setVelY( (abs(b.getVelY()) * pow(FRICTION, getMassSum())));
+			b.setVelY( (abs(b.getVelY()) * pow(FRICTION, getMassEnergy())));
 		}
 		if (b.getVelY() >= 0 && b.getIntY() + b.getRadius() >= height/2 - 1) {
-			b.setVelY(-1 *  (abs(b.getVelY()) * pow(FRICTION, getMassSum())));
+			b.setVelY(-1 *  (abs(b.getVelY()) * pow(FRICTION, getMassEnergy())));
 		}
 	}
 	
-	private double getMassSum(){
+	private double getMassEnergy(){
 		double sum = 0F;
 		for(Body b : bodies){
-			sum+=b.getMass();
+			sum+=abs(b.getMass());
 		}
 		return sum;
 	}
@@ -454,8 +454,7 @@ public class Gravity implements Runnable{
 			double xDiff = b2.getX() - b.getX();
 			double yDiff = b2.getY() - b.getY();
 			double d = hypot(xDiff, yDiff);
-			double force = G
-					* (b.getMass() * b2.getMass() / Math.pow(d, numDimensions - 1));
+			double force = G * b.getMass() * b2.getMass() / Math.pow(d, numDimensions - 1);
 			VectorUtil forces = new VectorUtil(force, d, xDiff, yDiff);
 			xForceSum += forces.getXMag();
 			yForceSum += forces.getYMag();
