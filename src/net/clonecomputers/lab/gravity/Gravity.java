@@ -81,7 +81,7 @@ public class Gravity implements Runnable{
 				}
 				//preset1(app);
 				//marsDeimosPreset(app);
-				app.randomBodies(200,100,  0,1000,  30,15,  true);
+				app.randomBodies(100,25,  0,5000,  100,50,  true);
 				//windowedBoundsTest(app);
 				//collisionTest(app);
 				//app.nanoTime = System.nanoTime();
@@ -95,19 +95,11 @@ public class Gravity implements Runnable{
 	}
 	
 	private static double gaussian(Random r, double mean, double sigma, boolean onlyPositive) {
-		double retVal;
-		do {
-			retVal = r.nextGaussian()*sigma + mean;
-		} while(retVal < 0 && !onlyPositive);
-		return retVal;
-	}
-	
-	private static int gaussianInt(Random r, double mean, double sigma, boolean onlyPositive) {
-		return (int)gaussian(r, mean, sigma, onlyPositive);
+		return (onlyPositive? abs(r.nextGaussian()): r.nextGaussian())*sigma + mean;
 	}
 	
 	private void randomBodies(double numBodiesMean, double numBodiesSigma, double velocityMean, double velocitySigma, double massMean, double massSigma, boolean onlyPositiveMass) {
-		int howManyBodies = gaussianInt(r, numBodiesMean, numBodiesSigma, true);
+		int howManyBodies = (int)gaussian(r, numBodiesMean, numBodiesSigma, true);
 		for(int i=0;i<howManyBodies;i++){
 			double x = r.nextDouble()*width - (width/2d);
 			double y = r.nextDouble()*height - (height/2d);
