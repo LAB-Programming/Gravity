@@ -5,7 +5,7 @@ gravitational forces in 2-Dimensions
 
 ##To Do
 
-###Known Bugs:
+###Undesrable Features (to be removed):
 * Wall positions don't update properly when resizing the window
 
 ###Missing features:
