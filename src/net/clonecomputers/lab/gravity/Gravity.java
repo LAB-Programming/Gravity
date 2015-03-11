@@ -4,6 +4,7 @@ import static java.lang.Math.*;
 
 import java.awt.*;
 import java.awt.event.*;
+import java.awt.geom.*;
 import java.awt.image.*;
 import java.lang.reflect.*;
 import java.util.*;
@@ -81,7 +82,7 @@ public class Gravity implements Runnable{
 				}
 				//preset1(app);
 				//marsDeimosPreset(app);
-				app.randomBodies(100,25,  0,5000,  100,50,  true);
+				app.randomBodies(200,15,  0,10000,  100,50,  true);
 				//windowedBoundsTest(app);
 				//collisionTest(app);
 				//app.nanoTime = System.nanoTime();
@@ -183,50 +184,69 @@ public class Gravity implements Runnable{
 	
 	@Override
 	public void run() {
-		/*while (running) {
+		centerSystemMass();
+		subtractSystemVelocity();
+		int stepsPerFrame = 1;
+		double nanosPerFrame = (1e9 / fps);
+		while(running){
 			if(LOG) System.out.println("run() in while loop");
-			long elapsedTime = System.nanoTime() - nanoTime;
-			nanoTime = System.nanoTime();
-			if(!paused) updateBodies(elapsedTime);
+			long frameStart = System.nanoTime();
+			centerSystemMass();
 			render();
-			Thread.yield();
-		}*/
-		try {
-			int stepsPerFrame = 1;
-			double nanosPerFrame = (1e9 / fps);
-			while(running){
-				if(LOG) System.out.println("run() in while loop");
-				long frameStart = System.nanoTime();
-				render();
-				long stepStart = System.nanoTime();
-				int stepsThisFrame = 0;
-				do {
-					updateBodies(nanosPerFrame / stepsPerFrame);
-					stepsThisFrame++;
-				} while(stepsThisFrame < stepsPerFrame);
-				long frameEnd = System.nanoTime();
-				long nanosThisFrame= frameEnd - frameStart;
-				long nanosSteppingThisFrame = frameEnd - stepStart;
-				double nanosLeft = nanosPerFrame - nanosThisFrame;
-				double nanosPerStep = nanosSteppingThisFrame / stepsThisFrame;
-				if(nanosThisFrame - nanosPerFrame > 5e6) {
-					System.err.printf("Can't keep up (took %.3f ms, expected %.3f ms)\n", nanosThisFrame/1e6, nanosPerFrame/1e6);
-					if(LOG) Thread.yield();
-				}
-				if(LOG) {
-					System.out.printf("Render took %.3f ms, %d steps took %.3f ms for %.3f ms total of an expected %.3f ms (had %.3f ms left, at %.3f ms per step we could have done %.3f more)\n", 
-							(stepStart - frameStart)/1e6, stepsThisFrame, nanosSteppingThisFrame/1e6, nanosThisFrame/1e6, nanosPerFrame/1e6, nanosLeft/1e6, nanosPerStep/1e6, nanosLeft / nanosPerStep);
-				}
-				stepsPerFrame = (int) (stepsThisFrame + (nanosLeft / nanosPerStep));
-				if(stepsPerFrame == 0) stepsPerFrame = 1;
+			long stepStart = System.nanoTime();
+			int stepsThisFrame = 0;
+			do {
+				updateBodies(nanosPerFrame / stepsPerFrame);
+				stepsThisFrame++;
+			} while(stepsThisFrame < stepsPerFrame);
+			long frameEnd = System.nanoTime();
+			long nanosThisFrame= frameEnd - frameStart;
+			long nanosSteppingThisFrame = frameEnd - stepStart;
+			double nanosLeft = nanosPerFrame - nanosThisFrame;
+			double nanosPerStep = nanosSteppingThisFrame / stepsThisFrame;
+			if(nanosThisFrame - nanosPerFrame > 5e6) {
+				System.err.printf("Can't keep up (took %.3f ms, expected %.3f ms)\n", nanosThisFrame/1e6, nanosPerFrame/1e6);
+				if(LOG) Thread.yield();
 			}
-		} catch (RuntimeException e) {
-			e.printStackTrace();
-		} finally {
-			close();
+			if(LOG) {
+				System.out.printf("Render took %.3f ms, %d steps took %.3f ms for %.3f ms total of an expected %.3f ms (had %.3f ms left, at %.3f ms per step we could have done %.3f more)\n", 
+						(stepStart - frameStart)/1e6, stepsThisFrame, nanosSteppingThisFrame/1e6, nanosThisFrame/1e6, nanosPerFrame/1e6, nanosLeft/1e6, nanosPerStep/1e6, nanosLeft / nanosPerStep);
+			}
+			stepsPerFrame = (int) (stepsThisFrame + (nanosLeft / nanosPerStep));
+			if(stepsPerFrame == 0) stepsPerFrame = 1;
 		}
 	}
 	
+	private void centerSystemMass() {
+		double mx = 0, my = 0, mass = 0;
+		for(Body b: bodies) {
+			mx += b.getX() * b.getMass();
+			my += b.getY() * b.getMass();
+			mass += b.getMass();
+		}
+		double x = mx / mass;
+		double y = my / mass;
+		for(Body b: bodies) {
+			b.setX(b.getX() - x);
+			b.setY(b.getY() - y);
+		}
+	}
+
+	private void subtractSystemVelocity() {
+		double px = 0, py = 0, mass = 0;
+		for(Body b: bodies) {
+			px += b.getVelX() * b.getMass();
+			py += b.getVelY() * b.getMass();
+			mass += b.getMass();
+		}
+		double vx = px / mass;
+		double vy = py / mass;
+		for(Body b: bodies) {
+			b.setVelX(b.getVelX() - vx);
+			b.setVelY(b.getVelY() - vy);
+		}
+	}
+
 	public void togglePause(){
 		paused=!paused;
 	}
@@ -245,6 +265,7 @@ public class Gravity implements Runnable{
 			img = frame.createVolatileImage(width, height);
 		}
 		Graphics g2 = img.createGraphics();*/
+		if(bs.contentsLost()) return;
 		Graphics g2 = null;
 		g2 = bs.getDrawGraphics();
 		
@@ -319,7 +340,7 @@ public class Gravity implements Runnable{
 	 * @return whether the list of bodies was modified or not
 	 */
 	private boolean checkForCollisions(Body b) {
-		checkForCollisionsWithWall(b);
+		//checkForCollisionsWithWall(b);
 		return checkForCollisionsWithOtherBodies(b);
 	}
 	
