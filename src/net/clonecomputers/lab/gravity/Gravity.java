@@ -4,7 +4,6 @@ import static java.lang.Math.*;
 
 import java.awt.*;
 import java.awt.event.*;
-import java.awt.geom.*;
 import java.awt.image.*;
 import java.lang.reflect.*;
 import java.util.*;
@@ -281,7 +280,8 @@ public class Gravity implements Runnable{
 			System.out.println("Root Pane bounds: " + frame.getRootPane().getBounds());
 		}
 		try {
-			g2.clearRect(0, 0, width, height);
+			g2.setColor(Color.BLACK);
+			g2.fillRect(0, 0, width, height);
 			drawBodies(g2);
 		} finally {
 			g2.dispose();
