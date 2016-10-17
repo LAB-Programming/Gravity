@@ -14,7 +14,7 @@ public class Gravity implements Runnable{
 	
 	private static final boolean GRAVITY = true;
 	
-	private boolean FULLSCREEN = true;
+	private boolean FULLSCREEN = false;
 	
 	private static boolean LOG = false;
 
@@ -28,9 +28,12 @@ public class Gravity implements Runnable{
 
 	private static Random r = new Random();
 	
-	public final int width;
+	public int width;
 
-	public final int height;
+	public int height;
+	
+	public double scale = 1;
+	public double logScale = 0;
 
 	private GraphicsDevice device;
 
@@ -225,6 +228,21 @@ public class Gravity implements Runnable{
 		}
 		double x = mx / mass;
 		double y = my / mass;
+		SortedMap<Double, Body> distances = new TreeMap<Double, Body>();
+		for(Body b: bodies) {
+			distances.put(Math.hypot(x - b.getX(), y - b.getY()) / b.getMass(), b);
+		}
+		mx = 0; my = 0; mass = 0;
+		int i = 0;
+		for(Body b: distances.values()) {
+			mx += b.getX() * b.getMass();
+			my += b.getY() * b.getMass();
+			mass += b.getMass();
+			i++;
+			if(i > distances.size() * .8d) break;
+		}
+		x = mx / mass;
+		y = my / mass;
 		for(Body b: bodies) {
 			b.setX(b.getX() - x);
 			b.setY(b.getY() - y);
@@ -300,15 +318,15 @@ public class Gravity implements Runnable{
 		for (Body b : bodies) {
 			if(b.getMass()>0) g2.setColor(Color.CYAN);
 			else g2.setColor(Color.RED);
-			g2.fillOval((int) round(b.getX() + width/2D - b.getRadius()),
-					(int) round(b.getY() + height/2D - b.getRadius()),
-					(int) round(b.getRadius()*2), (int)round(b.getRadius()*2));
+			g2.fillOval((int) round(b.getX()*scale + width/2D - b.getRadius()*scale),
+					(int) round(b.getY()*scale + height/2D - b.getRadius()*scale),
+					(int) round(b.getRadius()*2*scale), (int)round(b.getRadius()*2*scale));
 		}
 		g2.setColor(Color.WHITE);
 		for (Body b : bodies) {
-			g2.drawOval((int) round(b.getX() + width/2D - b.getRadius()),
-					(int) round(b.getY() + height/2D - b.getRadius()),
-					(int) round(b.getRadius()*2), (int)round(b.getRadius()*2));
+			g2.drawOval((int) round(b.getX()*scale + width/2D - b.getRadius()*scale),
+					(int) round(b.getY()*scale + height/2D - b.getRadius()*scale),
+					(int) round(b.getRadius()*2*scale), (int)round(b.getRadius()*2*scale));
 		}
 	}
 
@@ -493,6 +511,22 @@ public class Gravity implements Runnable{
 		// we must use root pane dimensions so menubar is excluded windowed mode
 		width = frame.getRootPane().getWidth();
 		height = frame.getRootPane().getHeight();
+		
+		frame.addComponentListener(new ComponentAdapter() {
+			@Override
+			public void componentResized(ComponentEvent e) {
+				width = frame.getRootPane().getWidth();
+				height = frame.getRootPane().getHeight();
+			}
+		});
+		
+		frame.addMouseWheelListener(new MouseWheelListener() {
+			@Override
+			public void mouseWheelMoved(MouseWheelEvent e) {
+				logScale += e.getWheelRotation();
+				scale = Math.exp(logScale * 0.1);
+			}
+		});
 	}
 
 	/**
